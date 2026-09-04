@@ -1,0 +1,177 @@
+import React, { useState } from 'react';
+import { X, Calendar as CalendarIcon, Check, ChevronLeft, ChevronRight, Sparkles } from 'lucide-react';
+
+export default function DatePickerModal({ isOpen, onClose, _currentDate = '15 Aug 2026', onSelectDate }) {
+  const [selectedYear, setSelectedYear] = useState(2026);
+  const [selectedMonth, setSelectedMonth] = useState(7); // August (0-indexed)
+  const [selectedDay, setSelectedDay] = useState(15);
+
+  if (!isOpen) return null;
+
+  const months = [
+    'January', 'February', 'March', 'April', 'May', 'June',
+    'July', 'August', 'September', 'October', 'November', 'December'
+  ];
+
+  const daysInMonth = new Date(selectedYear, selectedMonth + 1, 0).getDate();
+  const firstDayIndex = new Date(selectedYear, selectedMonth, 1).getDay();
+
+  const handlePrevMonth = () => {
+    if (selectedMonth === 0) {
+      setSelectedMonth(11);
+      setSelectedYear(selectedYear - 1);
+    } else {
+      setSelectedMonth(selectedMonth - 1);
+    }
+  };
+
+  const handleNextMonth = () => {
+    if (selectedMonth === 11) {
+      setSelectedMonth(0);
+      setSelectedYear(selectedYear + 1);
+    } else {
+      setSelectedMonth(selectedMonth + 1);
+    }
+  };
+
+  const handleApply = () => {
+    const formatted = `${selectedDay} ${months[selectedMonth].substring(0, 3)} ${selectedYear}`;
+    onSelectDate(formatted);
+    onClose();
+  };
+
+  const presets = [
+    { label: '15 Aug 2026 (Peak Monsoon & Cyclone Remal)', day: 15, month: 7, year: 2026 },
+    { label: '24 May 2026 (Pre-Monsoon Cyclone Mocha)', day: 24, month: 4, year: 2026 },
+    { label: 'Today (Live Satellite Sync)', day: 3, month: 8, year: 2026 },
+    { label: '15 Jan 2026 (Winter Ocean Baseline)', day: 15, month: 0, year: 2026 }
+  ];
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4 select-none animate-in fade-in duration-200">
+      <div className="glass-panel rounded-3xl p-6 border border-cyan-400/40 shadow-glow-cyan max-w-lg w-full relative">
+        {/* Close Button */}
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 p-2 rounded-xl bg-sky-500/10 text-sky-300 hover:text-white hover:bg-sky-500/20 transition-colors"
+        >
+          <X className="w-5 h-5" />
+        </button>
+
+        {/* Modal Header */}
+        <div className="flex items-center gap-3 mb-5">
+          <div className="w-12 h-12 rounded-2xl bg-cyan-500/20 border border-cyan-400/40 shadow-glow-cyan flex items-center justify-center text-cyan-400">
+            <CalendarIcon className="w-6 h-6 animate-pulse" />
+          </div>
+          <div>
+            <h2 className="text-lg font-black text-white tracking-wide">
+              Temporal Timeline & Observation Date Engine
+            </h2>
+            <p className="text-xs text-sky-300/70 font-mono">
+              Select any historical, current, or forecast date to recalculate ocean physics
+            </p>
+          </div>
+        </div>
+
+        {/* Quick Presets */}
+        <div className="flex flex-col gap-1.5 mb-4">
+          <div className="text-[10px] font-mono uppercase text-slate-400">Quick Simulation Scenarios</div>
+          <div className="grid grid-cols-2 gap-2">
+            {presets.map((p, idx) => (
+              <button
+                key={idx}
+                onClick={() => {
+                  setSelectedDay(p.day);
+                  setSelectedMonth(p.month);
+                  setSelectedYear(p.year);
+                }}
+                className="p-2 rounded-xl bg-[#061433]/80 hover:bg-[#0c2356] border border-sky-500/20 text-left text-[11px] font-medium text-sky-200 hover:text-cyan-300 transition-all flex items-center gap-1.5"
+              >
+                <Sparkles className="w-3 h-3 text-cyan-400 flex-shrink-0" />
+                <span className="truncate">{p.label}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Calendar Navigator */}
+        <div className="bg-[#071536]/90 p-4 rounded-2xl border border-sky-500/25 mb-4">
+          <div className="flex items-center justify-between mb-3 px-1">
+            <button
+              onClick={handlePrevMonth}
+              className="p-1.5 rounded-lg bg-sky-500/10 text-sky-300 hover:text-white hover:bg-sky-500/20"
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </button>
+            <div className="text-sm font-bold text-white font-mono">
+              {months[selectedMonth]} {selectedYear}
+            </div>
+            <button
+              onClick={handleNextMonth}
+              className="p-1.5 rounded-lg bg-sky-500/10 text-sky-300 hover:text-white hover:bg-sky-500/20"
+            >
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
+
+          {/* Days of Week Header */}
+          <div className="grid grid-cols-7 gap-1 text-center text-[10px] font-mono text-slate-400 mb-1">
+            <span>Su</span>
+            <span>Mo</span>
+            <span>Tu</span>
+            <span>We</span>
+            <span>Th</span>
+            <span>Fr</span>
+            <span>Sa</span>
+          </div>
+
+          {/* Days Grid */}
+          <div className="grid grid-cols-7 gap-1 text-center">
+            {Array.from({ length: firstDayIndex }).map((_, i) => (
+              <div key={`empty-${i}`} className="h-8" />
+            ))}
+            {Array.from({ length: daysInMonth }).map((_, i) => {
+              const d = i + 1;
+              const isSelected = selectedDay === d;
+              return (
+                <button
+                  key={d}
+                  onClick={() => setSelectedDay(d)}
+                  className={`h-8 rounded-lg text-xs font-mono font-semibold transition-all flex items-center justify-center ${
+                    isSelected
+                      ? 'bg-cyan-400 text-slate-950 font-bold shadow-glow-cyan scale-105'
+                      : 'text-slate-300 hover:bg-sky-500/20 hover:text-white'
+                  }`}
+                >
+                  {d}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Selected Date Summary & Apply */}
+        <div className="flex items-center justify-between pt-2 border-t border-sky-500/20">
+          <div className="text-xs font-mono text-cyan-300">
+            Selected: <span className="font-bold text-white">{selectedDay} {months[selectedMonth]} {selectedYear}</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={onClose}
+              className="px-4 py-2 rounded-xl bg-sky-500/10 hover:bg-sky-500/20 text-xs font-semibold text-slate-300 transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleApply}
+              className="px-5 py-2 rounded-xl bg-gradient-to-r from-sky-600 to-cyan-500 hover:from-sky-500 hover:to-cyan-400 text-xs font-bold text-white shadow-glow-cyan transition-all flex items-center gap-1.5"
+            >
+              <Check className="w-4 h-4" />
+              <span>Apply Observation Date</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}

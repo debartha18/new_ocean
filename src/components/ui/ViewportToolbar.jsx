@@ -2,15 +2,14 @@ import React from 'react';
 import { 
   Home, 
   Globe, 
-  Crosshair, 
-  Ruler, 
   Layers, 
   MapPin, 
   ChevronDown,
   Box,
   Boxes,
   Maximize2,
-  Compass
+  Compass,
+  Zap
 } from 'lucide-react';
 import { PARAMETERS, VIEW_MODES } from '../../data/oceanData';
 
@@ -20,6 +19,10 @@ export default function ViewportToolbar({
   setViewMode,
   onResetCamera,
   onToggleGlobe,
+  onOpenLocationModal,
+  onOpenWorldMap,
+  isStormLayerActive,
+  setIsStormLayerActive,
   regionName = 'Bay of Bengal',
   regionCoords = '15.297° N, 87.860° E'
 }) {
@@ -37,7 +40,11 @@ export default function ViewportToolbar({
     <>
       {/* 1. Top-Left Location Badge */}
       <div className="absolute top-4 left-4 z-20 flex items-center gap-2">
-        <div className="glass-panel px-3.5 py-2 rounded-xl flex items-center gap-2.5 border border-sky-500/30 shadow-cockpit cursor-pointer hover:border-cyan-400 transition-all">
+        <div 
+          onClick={onOpenLocationModal}
+          title="Click to change ocean basin or coordinates"
+          className="glass-panel px-3.5 py-2 rounded-xl flex items-center gap-2.5 border border-sky-500/30 shadow-cockpit cursor-pointer hover:border-cyan-400 hover:scale-[1.02] transition-all"
+        >
           <div className="p-1 rounded-lg bg-sky-500/20 text-cyan-300">
             <MapPin className="w-4 h-4" />
           </div>
@@ -64,23 +71,22 @@ export default function ViewportToolbar({
             <Home className="w-4 h-4" />
           </button>
           <button
-            onClick={onToggleGlobe}
-            title="Toggle Earth Globe View"
+            onClick={onOpenWorldMap || onToggleGlobe}
+            title="Open Interactive World Map"
             className="p-2.5 rounded-xl text-sky-300 hover:text-white hover:bg-sky-500/20 transition-colors"
           >
             <Globe className="w-4 h-4" />
           </button>
           <button
-            title="Focus Active Anomaly"
-            className="p-2.5 rounded-xl text-sky-300 hover:text-white hover:bg-sky-500/20 transition-colors"
+            onClick={() => setIsStormLayerActive && setIsStormLayerActive(!isStormLayerActive)}
+            title="Toggle 3D Storm, Tornado & Cyclone System"
+            className={`p-2.5 rounded-xl transition-colors ${
+              isStormLayerActive
+                ? 'bg-red-500/30 text-red-300 shadow-glow-red'
+                : 'text-sky-300 hover:text-white hover:bg-sky-500/20'
+            }`}
           >
-            <Crosshair className="w-4 h-4" />
-          </button>
-          <button
-            title="Bathymetry & Distance Measurement"
-            className="p-2.5 rounded-xl text-sky-300 hover:text-white hover:bg-sky-500/20 transition-colors"
-          >
-            <Ruler className="w-4 h-4" />
+            <Zap className={`w-4 h-4 ${isStormLayerActive ? 'animate-pulse' : ''}`} />
           </button>
           <button
             title="Layer Visibility & Grid Overlays"

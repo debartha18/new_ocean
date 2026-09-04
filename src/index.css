@@ -69,3 +69,101 @@
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(0, 240, 255, 0.7);
 }
+
+/* Print Optimization for Analytical Report */
+@media print {
+  body {
+    background-color: #ffffff !important;
+    color: #0f172a !important;
+    overflow: visible !important;
+    user-select: text !important;
+  }
+
+  /* Hide background canvas, headers, sidebars, controls */
+  header, aside, main, .no-print, [role="dialog"]:not(#analytic-printable-report) {
+    display: none !important;
+  }
+
+  /* Expand modal to full page */
+  .fixed.inset-0 {
+    position: static !important;
+    background: transparent !important;
+    padding: 0 !important;
+    overflow: visible !important;
+  }
+
+  #analytic-printable-report {
+    max-width: 100% !important;
+    max-height: none !important;
+    overflow: visible !important;
+    box-shadow: none !important;
+    border: none !important;
+    background: #ffffff !important;
+    color: #0f172a !important;
+    padding: 0 !important;
+  }
+
+  .printable-content {
+    color: #0f172a !important;
+  }
+
+  .printable-content h1, 
+  .printable-content h2, 
+  .printable-content h3, 
+  .printable-content h4 {
+    color: #032b69 !important;
+  }
+
+  .printable-content p, 
+  .printable-content span, 
+  .printable-content td, 
+  .printable-content th {
+    color: #1e293b !important;
+  }
+
+  .printable-content .bg-\[\#0a1b42\]\/60,
+  .printable-content .bg-\[\#081533\],
+  .printable-content .bg-\[\#040e24\],
+  .printable-content .bg-\[\#091738\],
+  .printable-content .bg-\[\#061433\],
+  .printable-content .bg-\[\#040e26\],
+  .printable-content .bg-\[\#0a1d48\] {
+    background-color: #f8fafc !important;
+    border: 1px solid #cbd5e1 !important;
+  }
+
+  .printable-content table {
+    border-collapse: collapse !important;
+  }
+
+  .printable-content th {
+    background-color: #e2e8f0 !important;
+    color: #0f172a !important;
+    font-weight: bold !important;
+  }
+
+  .printable-content tr {
+    border-bottom: 1px solid #e2e8f0 !important;
+  }
+
+  .printable-content td {
+    color: #1e293b !important;
+  }
+
+  .printable-content .text-cyan-300,
+  .printable-content .text-cyan-200,
+  .printable-content .text-sky-300,
+  .printable-content .text-sky-200 {
+    color: #0284c7 !important;
+  }
+
+  .printable-content .text-amber-300,
+  .printable-content .text-amber-200 {
+    color: #b45309 !important;
+  }
+
+  .printable-content .text-emerald-300,
+  .printable-content .text-emerald-200 {
+    color: #047857 !important;
+  }
+}

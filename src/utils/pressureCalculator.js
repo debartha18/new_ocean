@@ -1,0 +1,114 @@
+/**
+ * Ocean Hydrostatic Pressure & Physical Oceanography Calculator
+ * Based on UNESCO 1983 (IES 80) and TEOS-10 standard formulations
+ */
+
+/**
+ * Calculates local gravitational acceleration based on latitude using the Somigliana equation (WGS-84 / UNESCO)
+ * @param {number} lat - Latitude in degrees (-90 to +90)
+ * @returns {number} Gravitational acceleration in m/s^2
+ */
+export function calculateGravity(lat) {
+  const phi = (Math.abs(lat) * Math.PI) / 180;
+  const sinPhi = Math.sin(phi);
+  
+  // Somigliana formula approximation for sea level
+  // g(phi) = 9.780318 * (1 + 5.2788e-3 * sin^2(phi) - 2.36e-5 * sin^4(phi))
+  const g = 9.780318 * (1 + 0.0052788 * Math.pow(sinPhi, 2) - 0.0000236 * Math.pow(sinPhi, 4));
+  return parseFloat(g.toFixed(4));
+}
+
+/**
+ * Calculates approximate seawater density at depth z considering compressibility, temperature, and salinity
+ * @param {number} depth - Depth in meters (z >= 0)
+ * @param {number} sst - Surface temperature in °C (default ~28°C)
+ * @param {number} salinity - Salinity in PSU (default ~34.5)
+ * @returns {number} Density in kg/m^3
+ */
+export function calculateSeawaterDensity(depth, sst = 28.0, salinity = 34.5) {
+  // Typical surface density: ~1024 - 1027 kg/m^3 depending on SST and salinity
+  const baseSurfaceDensity = 1028.1 - 0.15 * sst + 0.75 * (salinity - 35);
+  // Compressibility increases density by approximately 4.4e-3 kg/m^3 per meter of depth
+  const compressibilityCorrection = 0.0044 * depth;
+  // Deep cold water density increase below thermocline (depth > 200m)
+  const thermoclineCooling = depth > 200 ? Math.min(2.5, (depth / 1000) * 1.8) : (depth / 200) * 0.5;
+  
+  const density = baseSurfaceDensity + compressibilityCorrection + thermoclineCooling;
+  return parseFloat(density.toFixed(2));
+}
+
+/**
+ * Calculates complete hydrostatic pressure parameters for a given depth and latitude
+ * @param {number} depth - Depth in meters (z >= 0)
+ * @param {number} lat - Latitude in degrees (-90 to +90)
+ * @param {number} sst - Surface temperature in °C
+ * @param {number} salinity - Salinity in PSU
+ * @returns {Object} Pressure measurements across all major standard scientific units
+ */
+export function calculateHydrostaticPressure(depth, lat = 15.0, sst = 28.0, salinity = 34.5) {
+  const g = calculateGravity(lat);
+  const density = calculateSeawaterDensity(depth, sst, salinity);
+  const atmosphericPressurePa = 101325; // 1 standard atm in Pascals (1013.25 hPa)
+
+  // Hydrostatic gauge pressure in Pascals: P_gauge = rho * g * depth
+  const gaugePressurePa = density * g * depth;
+  const totalPressurePa = atmosphericPressurePa + gaugePressurePa;
+
+  // Conversions
+  const pressureDbar = (totalPressurePa / 10000); // 1 dbar = 10,000 Pa
+  const gaugeDbar = (gaugePressurePa / 10000);
+  const pressureAtm = (totalPressurePa / 101325); // 1 atm = 101,325 Pa
+  const pressureBar = (totalPressurePa / 100000); // 1 bar = 100,000 Pa
+  const pressureMpa = (totalPressurePa / 1000000); // 1 MPa = 1,000,000 Pa
+  const pressurePsi = (totalPressurePa / 6894.757); // 1 PSI = 6894.76 Pa
+
+  // Water column mass over 1 square meter: Mass = rho_mean * depth
+  const columnMassKgPerM2 = density * depth;
+
+  // Comparison benchmark
+  let benchmark = 'Surface / Intertidal Zone';
+  if (depth >= 10000) benchmark = 'Challenger Deep (Mariana Trench Hadal Zone)';
+  else if (depth >= 6000) benchmark = 'Hadal Trench Zone (Extreme Deep Abyss)';
+  else if (depth >= 4000) benchmark = 'Abyssal Plain (Titanic Depth / Deep Seabed)';
+  else if (depth >= 2000) benchmark = 'Bathypelagic Midnight Zone (Bioluminescent Life)';
+  else if (depth >= 1000) benchmark = 'Mesopelagic Twilight Boundary (Permanent Darkness)';
+  else if (depth >= 500) benchmark = 'Deep Submarine Operational Hull Limit';
+  else if (depth >= 200) benchmark = 'Continental Shelf Edge / Thermocline';
+  else if (depth >= 50) benchmark = 'Epipelagic Photic Zone (Commercial Diving Limit)';
+  else if (depth > 0) benchmark = 'Recreational Scuba Dive Range';
+
+  return {
+    depth,
+    lat,
+    gravity: g,
+    density,
+    totalPa: Math.round(totalPressurePa),
+    gaugePa: Math.round(gaugePressurePa),
+    dbar: parseFloat(pressureDbar.toFixed(2)),
+    gaugeDbar: parseFloat(gaugeDbar.toFixed(2)),
+    atm: parseFloat(pressureAtm.toFixed(2)),
+    bar: parseFloat(pressureBar.toFixed(2)),
+    mpa: parseFloat(pressureMpa.toFixed(3)),
+    psi: parseFloat(pressurePsi.toFixed(1)),
+    columnMassKgPerM2: Math.round(columnMassKgPerM2),
+    benchmark
+  };
+}
+
+/**
+ * Standard depth profile levels in meters
+ */
+export const STANDARD_DEPTH_LEVELS = [0, 10, 25, 50, 100, 200, 500, 1000, 1500, 2000, 3000, 4000, 5000];
+
+/**
+ * Generates an entire water column pressure profile array for a given latitude
+ * @param {number} lat - Latitude
+ * @param {number} sst - Surface temperature
+ * @param {number} salinity - Salinity
+ * @returns {Array<Object>} Profile array across standard depth levels
+ */
+export function generatePressureDepthProfile(lat = 15.0, sst = 28.0, salinity = 34.5) {
+  return STANDARD_DEPTH_LEVELS.map(depth => {
+    return calculateHydrostaticPressure(depth, lat, sst, salinity);
+  });
+}

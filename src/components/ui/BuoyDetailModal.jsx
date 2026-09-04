@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, Radio, Battery, Activity, ShieldCheck, Waves, Compass, Clock, MapPin } from 'lucide-react';
+import { X, Radio, Clock, MapPin } from 'lucide-react';
 
 export default function BuoyDetailModal({ buoy, onClose }) {
   if (!buoy) return null;

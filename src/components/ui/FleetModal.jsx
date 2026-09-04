@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Radio, Filter, MapPin, CheckCircle2, ChevronRight } from 'lucide-react';
+import { X, Radio, ChevronRight } from 'lucide-react';
 import { BUOY_MARKERS } from '../../data/oceanData';
 
 export default function FleetModal({ isOpen, onClose, onSelectBuoy }) {

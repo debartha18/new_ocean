@@ -1,7 +1,19 @@
 import React from 'react';
-import { Waves, Calendar, Moon, Menu, Bell, Compass, Activity, Globe2 } from 'lucide-react';
+import { Waves, Calendar, Moon, Bell, Compass, Globe2, FileText, Gauge } from 'lucide-react';
 
-export default function Header({ activeTab, setActiveTab, currentTime, onOpenAlerts }) {
+export default function Header({
+  activeTab,
+  setActiveTab,
+  currentTime,
+  selectedDate = '15 Aug 2026',
+  onOpenDatePicker,
+  activeRegion,
+  onOpenLocationModal,
+  onOpenStormNews,
+  onOpenAlerts,
+  onOpenAnalyticReport,
+  onOpenDepthPressure
+}) {
   const tabs = ['Dashboard', '3D View', 'Map View', 'Analytics', 'Alerts', 'Data Explorer', 'About'];
 
   return (
@@ -37,16 +49,20 @@ export default function Header({ activeTab, setActiveTab, currentTime, onOpenAle
               key={tab}
               onClick={() => {
                 if (tab === 'Alerts' && onOpenAlerts) onOpenAlerts();
+                else if (tab === 'Analytics' && onOpenAnalyticReport) onOpenAnalyticReport();
                 else setActiveTab(tab);
               }}
-              className={`px-4 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 flex items-center gap-1.5 ${
+              className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 flex items-center gap-1.5 cursor-pointer ${
                 isActive
-                  ? 'bg-gradient-to-r from-sky-500 to-cyan-500 text-white shadow-glow-cyan'
+                  ? 'bg-gradient-to-r from-sky-600 to-cyan-500 text-white shadow-glow-cyan'
                   : 'text-slate-300 hover:text-white hover:bg-sky-500/10'
               }`}
             >
               {tab === 'Alerts' && (
                 <span className="w-2 h-2 rounded-full bg-red-400 animate-ping mr-0.5" />
+              )}
+              {tab === 'Map View' && (
+                <Globe2 className="w-3.5 h-3.5" />
               )}
               {tab}
             </button>
@@ -54,30 +70,76 @@ export default function Header({ activeTab, setActiveTab, currentTime, onOpenAle
         })}
       </nav>
 
-      {/* Live Date, Time & Controls */}
-      <div className="flex items-center gap-3">
-        {/* UTC Time box */}
-        <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#0b1b42]/80 border border-sky-500/20 text-xs text-sky-200 font-mono">
-          <Calendar className="w-3.5 h-3.5 text-cyan-400" />
-          <span>15 Aug 2026</span>
+      {/* Live Date, Location & Controls */}
+      <div className="flex items-center gap-2.5">
+        {/* Active Location & Coordinates Selector Badge */}
+        <button
+          onClick={onOpenLocationModal}
+          title="Change Location or Enter Custom Lat/Lon Coordinates"
+          className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#0b1b42]/80 hover:bg-[#12285a] border border-sky-500/30 hover:border-cyan-400 text-xs text-sky-200 transition-all"
+        >
+          <Compass className="w-3.5 h-3.5 text-cyan-400 animate-spin-slow" />
+          <div className="text-left leading-none">
+            <div className="font-bold text-white text-[11px] truncate max-w-[110px]">
+              {activeRegion?.name || 'Bay of Bengal'}
+            </div>
+            <div className="text-[9px] font-mono text-cyan-300 mt-0.5 hidden xl:block">
+              {activeRegion?.coords || '15.297° N, 87.860° E'}
+            </div>
+          </div>
+        </button>
+
+        {/* Live Date Engine Box */}
+        <button
+          onClick={onOpenDatePicker}
+          title="Click to Open Observation Date & Temporal Engine"
+          className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#0b1b42]/80 hover:bg-[#12285a] border border-sky-500/30 hover:border-cyan-400 text-xs text-sky-200 font-mono transition-all group"
+        >
+          <Calendar className="w-3.5 h-3.5 text-cyan-400 group-hover:scale-110 transition-transform" />
+          <span className="font-bold text-white group-hover:text-cyan-300 transition-colors">{selectedDate}</span>
           <span className="text-sky-500">•</span>
           <span className="text-cyan-300 font-bold">{currentTime || '12:00'} UTC</span>
-        </div>
+        </button>
+
+        {/* Depth Pressure Quick Trigger */}
+        <button
+          onClick={onOpenDepthPressure}
+          title="Hydrostatic Pressure Profiler across Depths"
+          className="hidden lg:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#0b1b42]/80 hover:bg-[#12285a] border border-sky-500/30 hover:border-cyan-400 text-xs text-sky-200 transition-all cursor-pointer"
+        >
+          <Gauge className="w-3.5 h-3.5 text-cyan-400" />
+          <span className="font-bold text-[11px]">Pressure Calc</span>
+        </button>
+
+        {/* Analytic Report Quick Trigger */}
+        <button
+          onClick={onOpenAnalyticReport}
+          title="Print & View Official Oceanographic Analytical Report"
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-sky-600/80 to-cyan-500/80 hover:from-sky-500 hover:to-cyan-400 border border-cyan-400/40 text-xs text-white shadow-glow-cyan transition-all cursor-pointer"
+        >
+          <FileText className="w-3.5 h-3.5 text-white" />
+          <span className="font-bold hidden sm:inline text-[11px]">Analytic Report</span>
+        </button>
+
+        {/* Storm Radar & News Bulletin Button */}
+        <button
+          onClick={onOpenStormNews}
+          title="Live Marine Weather News, Rain & Storm Probability"
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-red-950/60 hover:bg-red-900/70 border border-red-500/40 text-xs text-red-300 shadow-glow-red transition-all cursor-pointer"
+        >
+          <Bell className="w-3.5 h-3.5 text-red-400 animate-pulse" />
+          <span className="font-bold hidden sm:inline text-[11px]">Storm Radar</span>
+          <span className="px-1.5 py-0.5 rounded bg-red-500/30 text-[9px] font-mono font-bold text-white">
+            {activeRegion?.stormProbability ?? 75}%
+          </span>
+        </button>
 
         {/* Night / Theme toggle */}
         <button 
           title="Toggle Day/Night Mode"
-          className="p-2 rounded-lg bg-[#0b1b42]/80 border border-sky-500/20 text-sky-300 hover:text-cyan-300 hover:border-cyan-500/40 transition-colors"
+          className="p-2 rounded-xl bg-[#0b1b42]/80 border border-sky-500/20 text-sky-300 hover:text-cyan-300 hover:border-cyan-500/40 transition-colors"
         >
           <Moon className="w-4 h-4" />
-        </button>
-
-        {/* Menu toggle */}
-        <button 
-          title="Platform Menu"
-          className="p-2 rounded-lg bg-[#0b1b42]/80 border border-sky-500/20 text-sky-300 hover:text-cyan-300 hover:border-cyan-500/40 transition-colors"
-        >
-          <Menu className="w-4 h-4" />
         </button>
       </div>
     </header>

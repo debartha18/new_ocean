@@ -1,7 +1,7 @@
 import React from 'react';
 import { PARAMETERS } from '../../data/oceanData';
 import { generateParameterThumbnail } from '../canvas/proceduralTextures';
-import { Plus, Minus, Maximize2 } from 'lucide-react';
+import { Plus, Minus } from 'lucide-react';
 
 export default function BottomParameterStrip({ selectedParam, setSelectedParam }) {
   return (

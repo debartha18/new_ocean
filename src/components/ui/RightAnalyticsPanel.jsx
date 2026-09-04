@@ -1,12 +1,13 @@
 import React from 'react';
 import { 
-  Radio, 
   ChevronRight, 
-  TrendingUp, 
-  AlertTriangle, 
   Brain, 
-  CheckCircle2, 
-  ChevronDown 
+  ChevronDown,
+  Zap,
+  Newspaper,
+  FileText,
+  Printer,
+  Gauge
 } from 'lucide-react';
 import { 
   IN_SITU_SUMMARY, 
@@ -14,8 +15,17 @@ import {
   VALIDATION_METRICS, 
   AI_ANOMALY 
 } from '../../data/oceanData';
+import { calculateHydrostaticPressure } from '../../utils/pressureCalculator';
 
-export default function RightAnalyticsPanel({ onOpenAnomalyModal, onOpenFleetModal }) {
+export default function RightAnalyticsPanel({ 
+  onOpenAnomalyModal, 
+  onOpenFleetModal, 
+  activeRegion, 
+  onOpenStormNews,
+  onOpenAnalyticReport,
+  onOpenDepthPressure,
+  depth = 50
+}) {
   const chartW = 240;
   const chartH = 85;
   const minTemp = 27.0;
@@ -36,8 +46,121 @@ export default function RightAnalyticsPanel({ onOpenAnomalyModal, onOpenFleetMod
   const pathModel = pointsModel.reduce((acc, p, i) => (i === 0 ? `M ${p.x} ${p.y}` : `${acc} L ${p.x} ${p.y}`), '');
   const pathObs = pointsObs.reduce((acc, p, i) => (i === 0 ? `M ${p.x} ${p.y}` : `${acc} L ${p.x} ${p.y}`), '');
 
+  const stormProb = activeRegion?.stormProbability ?? 75;
+  const rainRate = activeRegion?.rainRate ?? 38.5;
+  const waveHeight = activeRegion?.waveHeight ?? 1.65;
+
   return (
     <aside className="w-80 h-full flex flex-col gap-3 p-3 select-none overflow-y-auto z-20">
+      {/* 0. Position-Specific Storm & Rain Intelligence Card */}
+      <div className="glass-panel rounded-2xl p-3.5 border border-red-500/40 bg-gradient-to-b from-[#1c081e]/80 to-[#07132e]/90 shadow-glow-red">
+        <div className="flex items-center justify-between mb-2 px-1">
+          <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-red-400">
+            <Zap className="w-3.5 h-3.5 text-red-400 animate-pulse" />
+            <span>Position Storm Risk</span>
+          </div>
+          <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-red-500/20 text-red-300 border border-red-500/30">
+            {activeRegion?.activeStorm?.category || 'Severe Squall'}
+          </span>
+        </div>
+
+        <div className="mb-2.5 px-1">
+          <div className="text-xs font-bold text-white truncate">{activeRegion?.name || 'Bay of Bengal'}</div>
+          <div className="text-[10px] font-mono text-cyan-300/80">{activeRegion?.coords || '15.297° N, 87.860° E'}</div>
+        </div>
+
+        {/* 3 Metric Gauges for this exact coordinate */}
+        <div className="grid grid-cols-3 gap-1.5 mb-3 text-center">
+          <div className="bg-[#120716] p-2 rounded-xl border border-red-500/20">
+            <div className="text-[9px] font-mono text-slate-400 uppercase">Storm Risk</div>
+            <div className="text-sm font-bold font-mono text-red-400 mt-0.5">{stormProb}%</div>
+          </div>
+          <div className="bg-[#120716] p-2 rounded-xl border border-red-500/20">
+            <div className="text-[9px] font-mono text-slate-400 uppercase">Rain Rate</div>
+            <div className="text-sm font-bold font-mono text-amber-300 mt-0.5">{rainRate} <span className="text-[8px]">mm/h</span></div>
+          </div>
+          <div className="bg-[#120716] p-2 rounded-xl border border-red-500/20">
+            <div className="text-[9px] font-mono text-slate-400 uppercase">Wave Swell</div>
+            <div className="text-sm font-bold font-mono text-cyan-300 mt-0.5">{waveHeight} <span className="text-[8px]">m</span></div>
+          </div>
+        </div>
+
+        <button
+          onClick={onOpenStormNews}
+          className="w-full py-2 px-3 rounded-xl bg-red-500/25 hover:bg-red-500/35 text-xs font-bold text-red-200 border border-red-500/40 flex items-center justify-between transition-all shadow-glow-red"
+        >
+          <span className="flex items-center gap-1.5">
+            <Newspaper className="w-3.5 h-3.5 text-red-400" />
+            <span>Live Marine Storm News</span>
+          </span>
+          <ChevronRight className="w-4 h-4" />
+        </button>
+      </div>
+
+      {/* 0.5. Official Analytical Report & Print Action Card */}
+      <div className="glass-panel rounded-2xl p-3.5 border border-cyan-400/40 bg-gradient-to-b from-[#09224d]/80 to-[#041026]/90 shadow-glow-cyan">
+        <div className="flex items-center justify-between mb-2 px-1">
+          <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-cyan-300">
+            <FileText className="w-3.5 h-3.5 text-cyan-400" />
+            <span>Analytical Report</span>
+          </div>
+          <span className="text-[10px] font-mono text-cyan-300 bg-cyan-500/20 px-2 py-0.5 rounded border border-cyan-400/30">
+            Printable / PDF
+          </span>
+        </div>
+
+        <p className="text-[11px] text-slate-300 mb-2.5 px-1 leading-tight">
+          Generate formal oceanographic telemetry dossier with depth pressure matrix & beach forecasts.
+        </p>
+
+        <button
+          onClick={onOpenAnalyticReport}
+          className="w-full py-2 px-3 rounded-xl bg-gradient-to-r from-sky-600 to-cyan-500 hover:from-sky-500 hover:to-cyan-400 text-xs font-bold text-white shadow-glow-cyan flex items-center justify-between transition-all cursor-pointer"
+        >
+          <span className="flex items-center gap-2">
+            <Printer className="w-3.5 h-3.5" />
+            <span>Print Analytic Report</span>
+          </span>
+          <ChevronRight className="w-4 h-4" />
+        </button>
+      </div>
+
+      {/* 0.6. Subsurface Hydrostatic Pressure Card */}
+      {(() => {
+        const pressure = calculateHydrostaticPressure(depth, activeRegion?.lat || 15.0, activeRegion?.sst || 28.0);
+        return (
+          <div className="glass-panel rounded-2xl p-3 border border-sky-500/20 bg-[#05112c]/70">
+            <div className="flex items-center justify-between mb-1.5 px-1">
+              <div className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-sky-200">
+                <Gauge className="w-3.5 h-3.5 text-cyan-400" />
+                <span>Depth Pressure ({depth}m)</span>
+              </div>
+              <button
+                onClick={onOpenDepthPressure}
+                className="text-[10px] text-cyan-400 hover:underline font-mono"
+              >
+                Calculator ↗
+              </button>
+            </div>
+
+            <div className="grid grid-cols-3 gap-1 text-center font-mono">
+              <div className="bg-[#030a1c] p-1.5 rounded-lg border border-sky-500/10">
+                <div className="text-[8px] text-slate-400">Dbar</div>
+                <div className="text-xs font-bold text-cyan-300">{pressure.dbar}</div>
+              </div>
+              <div className="bg-[#030a1c] p-1.5 rounded-lg border border-sky-500/10">
+                <div className="text-[8px] text-slate-400">Atm</div>
+                <div className="text-xs font-bold text-sky-300">{pressure.atm}</div>
+              </div>
+              <div className="bg-[#030a1c] p-1.5 rounded-lg border border-sky-500/10">
+                <div className="text-[8px] text-slate-400">MPa</div>
+                <div className="text-xs font-bold text-amber-300">{pressure.mpa}</div>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
+
       {/* 1. In-Situ Observations Summary Card */}
       <div className="glass-panel rounded-2xl p-3.5 border border-sky-500/20">
         <div className="flex items-center justify-between mb-3 px-1">

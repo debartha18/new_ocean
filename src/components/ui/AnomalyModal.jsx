@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, Brain, AlertTriangle, Activity, ShieldAlert, Sparkles, MapPin, Gauge } from 'lucide-react';
+import { X, Brain, ShieldAlert, Sparkles } from 'lucide-react';
 import { AI_ANOMALY } from '../../data/oceanData';
 
 export default function AnomalyModal({ isOpen, onClose }) {

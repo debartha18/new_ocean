@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { 
   Thermometer, 
   Droplets, 
@@ -9,8 +9,12 @@ import {
   Play, 
   Pause, 
   Calendar,
-  Layers,
-  ChevronRight
+  ChevronRight,
+  Compass,
+  ArrowRight,
+  Zap,
+  Newspaper,
+  Gauge
 } from 'lucide-react';
 import { PARAMETERS, DEPTH_LEVELS } from '../../data/oceanData';
 
@@ -24,8 +28,36 @@ export default function LeftControlPanel({
   isPlaying,
   setIsPlaying,
   simSpeed,
-  setSimSpeed
+  setSimSpeed,
+  activeRegion,
+  onOpenLocationModal,
+  onCustomCoords,
+  selectedDate = '15 Aug 2026',
+  onOpenDatePicker,
+  onOpenStormNews,
+  isStormLayerActive,
+  setIsStormLayerActive,
+  onOpenDepthPressure
 }) {
+  const [prevRegionId, setPrevRegionId] = useState(activeRegion?.id);
+  const [inputLat, setInputLat] = useState(activeRegion?.lat?.toString() || '15.297');
+  const [inputLon, setInputLon] = useState(activeRegion?.lon?.toString() || '87.860');
+
+  if (activeRegion && activeRegion.id !== prevRegionId) {
+    setPrevRegionId(activeRegion.id);
+    setInputLat(activeRegion.lat?.toString() || '');
+    setInputLon(activeRegion.lon?.toString() || '');
+  }
+
+  const handleApplyCoords = (e) => {
+    e.preventDefault();
+    const lat = parseFloat(inputLat);
+    const lon = parseFloat(inputLon);
+    if (!isNaN(lat) && !isNaN(lon) && onCustomCoords) {
+      onCustomCoords(lat, lon);
+    }
+  };
+
   const paramIcons = {
     sst: Thermometer,
     salinity: Droplets,
@@ -43,6 +75,66 @@ export default function LeftControlPanel({
 
   return (
     <aside className="w-72 h-full flex flex-col gap-3 p-3 select-none overflow-y-auto z-20">
+      {/* 0. Location & Coordinates Operator Card */}
+      <div className="glass-panel rounded-2xl p-3.5 border border-sky-500/30 shadow-cockpit">
+        <div className="flex items-center justify-between mb-2 px-1">
+          <div className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-cyan-300">
+            <Compass className="w-3.5 h-3.5 text-cyan-400" />
+            <span>Position / Coordinates</span>
+          </div>
+          <button
+            onClick={onOpenLocationModal}
+            className="text-[10px] font-bold text-cyan-400 hover:text-white bg-cyan-500/20 px-2 py-0.5 rounded border border-cyan-400/30 transition-colors"
+          >
+            Change Basin
+          </button>
+        </div>
+
+        <div className="mb-2 px-1">
+          <div className="text-xs font-bold text-white truncate">{activeRegion?.name || 'Bay of Bengal'}</div>
+          <div className="text-[10px] font-mono text-sky-300/80">{activeRegion?.coords || '15.297° N, 87.860° E'}</div>
+        </div>
+
+        {/* Inline Latitude & Longitude Input Form */}
+        <form onSubmit={handleApplyCoords} className="bg-[#050e24]/90 p-2.5 rounded-xl border border-sky-500/20 flex flex-col gap-2">
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <span className="text-[9px] font-mono text-slate-400 block mb-0.5">Lat (°N/S)</span>
+              <input
+                type="number"
+                step="0.001"
+                min="-90"
+                max="90"
+                value={inputLat}
+                onChange={(e) => setInputLat(e.target.value)}
+                placeholder="15.297"
+                className="w-full px-2 py-1 rounded-lg bg-[#020817] border border-sky-500/30 text-xs font-mono text-cyan-300 focus:outline-none focus:border-cyan-400"
+              />
+            </div>
+            <div>
+              <span className="text-[9px] font-mono text-slate-400 block mb-0.5">Lon (°E/W)</span>
+              <input
+                type="number"
+                step="0.001"
+                min="-180"
+                max="180"
+                value={inputLon}
+                onChange={(e) => setInputLon(e.target.value)}
+                placeholder="87.860"
+                className="w-full px-2 py-1 rounded-lg bg-[#020817] border border-sky-500/30 text-xs font-mono text-cyan-300 focus:outline-none focus:border-cyan-400"
+              />
+            </div>
+          </div>
+          <button
+            type="submit"
+            className="w-full py-1 rounded-lg bg-sky-600/70 hover:bg-cyan-500 hover:text-slate-950 text-white text-[11px] font-bold transition-all flex items-center justify-center gap-1 shadow-glow-cyan"
+          >
+            <span>Target Coordinates</span>
+            <ArrowRight className="w-3.5 h-3.5" />
+          </button>
+        </form>
+      </div>
+
       {/* 1. Parameters Selection Card */}
       <div className="glass-panel rounded-2xl p-3.5 border border-sky-500/20">
         <div className="flex items-center justify-between mb-3 px-1">
@@ -128,6 +220,18 @@ export default function LeftControlPanel({
             );
           })}
         </div>
+
+        {/* Depth & Hydrostatic Pressure Quick Tool Button */}
+        <button
+          onClick={onOpenDepthPressure}
+          className="w-full mt-3 py-2 px-2.5 rounded-xl bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-400/30 text-[11px] font-bold text-cyan-300 flex items-center justify-between transition-all cursor-pointer shadow-sm"
+        >
+          <span className="flex items-center gap-1.5">
+            <Gauge className="w-3.5 h-3.5 text-cyan-400" />
+            <span>Pressure Calculator (dbar/atm)</span>
+          </span>
+          <ChevronRight className="w-3.5 h-3.5" />
+        </button>
       </div>
 
       {/* 3. Time Scrubber & Playback Card */}
@@ -142,10 +246,13 @@ export default function LeftControlPanel({
         </div>
 
         {/* Date Selector Badge */}
-        <div className="flex items-center justify-between px-3 py-1.5 mb-3 bg-[#0a1838]/80 border border-sky-500/20 rounded-xl text-xs text-sky-200">
+        <div 
+          onClick={onOpenDatePicker}
+          className="flex items-center justify-between px-3 py-1.5 mb-3 bg-[#0a1838]/80 hover:bg-[#12285a] border border-sky-500/20 hover:border-cyan-400 rounded-xl text-xs text-sky-200 cursor-pointer transition-colors"
+        >
           <div className="flex items-center gap-2">
             <Calendar className="w-3.5 h-3.5 text-cyan-400" />
-            <span>15 Aug 2026</span>
+            <span className="font-bold text-white">{selectedDate}</span>
           </div>
           <button className="text-[11px] text-cyan-400 hover:underline">Change</button>
         </div>
@@ -195,6 +302,52 @@ export default function LeftControlPanel({
             ))}
           </div>
         </div>
+      </div>
+
+      {/* 4. Storm, Rain & Marine Cyclone Threat Card */}
+      <div className="glass-panel rounded-2xl p-3.5 border border-red-500/30 bg-gradient-to-b from-[#18091c]/80 to-[#07132e]/80">
+        <div className="flex items-center justify-between mb-2 px-1">
+          <div className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-red-400">
+            <Zap className="w-3.5 h-3.5 text-red-400 animate-pulse" />
+            <span>Storm & Rain Threat</span>
+          </div>
+          <button
+            onClick={() => setIsStormLayerActive && setIsStormLayerActive(!isStormLayerActive)}
+            className={`text-[10px] font-bold px-2 py-0.5 rounded border transition-colors ${
+              isStormLayerActive
+                ? 'bg-red-500/30 text-red-300 border-red-400/50'
+                : 'bg-slate-800/60 text-slate-400 border-slate-700'
+            }`}
+          >
+            {isStormLayerActive ? '3D Storm: ON' : '3D Storm: OFF'}
+          </button>
+        </div>
+
+        <div className="grid grid-cols-2 gap-2 mb-2.5">
+          <div className="bg-[#120716] p-2 rounded-xl border border-red-500/20 text-center">
+            <div className="text-[9px] font-mono text-slate-400 uppercase">Storm Risk</div>
+            <div className="text-sm font-bold font-mono text-red-400">
+              {activeRegion?.stormProbability ?? 75}%
+            </div>
+          </div>
+          <div className="bg-[#120716] p-2 rounded-xl border border-red-500/20 text-center">
+            <div className="text-[9px] font-mono text-slate-400 uppercase">Rain Rate</div>
+            <div className="text-sm font-bold font-mono text-amber-300">
+              {activeRegion?.rainRate ?? 38.5} mm/h
+            </div>
+          </div>
+        </div>
+
+        <button
+          onClick={onOpenStormNews}
+          className="w-full py-1.5 px-3 rounded-xl bg-red-500/20 hover:bg-red-500/30 border border-red-500/40 text-xs font-bold text-red-300 flex items-center justify-between transition-colors shadow-glow-red"
+        >
+          <span className="flex items-center gap-1.5">
+            <Newspaper className="w-3.5 h-3.5" />
+            <span>Position Storm News</span>
+          </span>
+          <ChevronRight className="w-4 h-4" />
+        </button>
       </div>
     </aside>
   );

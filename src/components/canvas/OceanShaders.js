@@ -7,6 +7,7 @@ export const OceanSurfaceShader = {
     uParamType: { value: 0 }, // 0: SST, 1: Salinity, 2: Currents, 3: Wave, 4: Chlorophyll, 5: Oxygen
     uDepth: { value: 50.0 },  // 0 to 6000m
     uMode: { value: 1 },       // 0: Surface, 1: Depth Slice, 2: Volume, 3: Isosurface, 4: Vector Field
+    uWaveSwell: { value: 1.0 }, // Multiplier for physical wave heights
     uSunDirection: { value: new THREE.Vector3(0.5, 1.0, 0.5).normalize() },
   },
   vertexShader: `
@@ -14,16 +15,30 @@ export const OceanSurfaceShader = {
     varying vec3 vWorldPosition;
     varying vec3 vNormal;
     varying float vWaveHeight;
+    varying float vFoam;
     uniform float uTime;
+    uniform float uWaveSwell;
 
     void main() {
       vUv = uv;
       
-      // Physical surface wave displacement
-      float wave1 = sin(uv.x * 28.0 + uTime * 1.8) * cos(uv.y * 22.0 + uTime * 1.4) * 0.012;
-      float wave2 = sin(uv.x * 56.0 - uTime * 2.5) * cos(uv.y * 42.0 + uTime * 2.0) * 0.006;
-      float totalWave = wave1 + wave2;
+      // Dynamic physical 3D wave displacement harmonics
+      float k1 = 18.0;
+      float w1 = uTime * 2.2;
+      float wave1 = sin(uv.x * k1 + uv.y * 12.0 + w1) * 0.042 * uWaveSwell;
+      
+      float k2 = 36.0;
+      float w2 = uTime * 3.2;
+      float wave2 = sin(uv.x * 24.0 - uv.y * k2 - w2) * 0.024 * uWaveSwell;
+      
+      // Peaked wave crests (sharp crests, flatter troughs)
+      float wave3 = pow((sin(uv.x * 32.0 + uv.y * 26.0 + uTime * 2.8) * 0.5 + 0.5), 2.2) * 0.038 * uWaveSwell;
+      
+      float totalWave = wave1 + wave2 + wave3;
       vWaveHeight = totalWave;
+      
+      // Foam factor on crest peaks
+      vFoam = smoothstep(0.035 * uWaveSwell, 0.075 * uWaveSwell, totalWave);
 
       vec3 displaced = position;
       displaced.z += totalWave;
@@ -32,8 +47,8 @@ export const OceanSurfaceShader = {
       vWorldPosition = worldPos.xyz;
       
       vec3 norm = normal;
-      norm.x += cos(uv.x * 32.0 + uTime * 1.5) * 0.04;
-      norm.y += sin(uv.y * 32.0 + uTime * 1.5) * 0.04;
+      norm.x += cos(uv.x * 28.0 + uTime * 2.2) * 0.08 * uWaveSwell;
+      norm.y += sin(uv.y * 28.0 + uTime * 2.2) * 0.08 * uWaveSwell;
       vNormal = normalize(normalMatrix * norm);
 
       gl_Position = projectionMatrix * viewMatrix * worldPos;
@@ -44,11 +59,13 @@ export const OceanSurfaceShader = {
     uniform int uParamType;
     uniform float uDepth;
     uniform int uMode;
+    uniform float uWaveSwell;
     
     varying vec2 vUv;
     varying vec3 vWorldPosition;
     varying vec3 vNormal;
     varying float vWaveHeight;
+    varying float vFoam;
 
     // High saturation rainbow colormap matching target reference image
     vec3 colormapSST(float t) {
@@ -166,9 +183,14 @@ export const OceanSurfaceShader = {
       vec3 lightDir = normalize(vec3(0.3, 0.9, 0.5));
       vec3 viewDir = normalize(cameraPosition - vWorldPosition);
       vec3 halfVector = normalize(lightDir + viewDir);
-      float spec = pow(max(dot(vNormal, halfVector), 0.0), 36.0) * 0.45;
+      float spec = pow(max(dot(vNormal, halfVector), 0.0), 36.0) * 0.55;
 
-      vec3 finalColor = mix(color, vec3(1.0, 1.0, 1.0), whiteStreamline * 0.65) + vec3(spec);
+      // Blend streamline vector flow
+      vec3 surfaceCol = mix(color, vec3(1.0, 1.0, 1.0), whiteStreamline * 0.65);
+      
+      // Dynamic white wave foam / whitecaps on rolling wave peaks
+      vec3 foamColor = vec3(0.92, 0.98, 1.0);
+      vec3 finalColor = mix(surfaceCol, foamColor, vFoam * 0.85) + vec3(spec);
 
       // Smooth edge blending with surrounding terrain
       float edgeDist = min(min(vUv.x, 1.0 - vUv.x), min(vUv.y, 1.0 - vUv.y));
