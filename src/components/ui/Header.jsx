@@ -14,7 +14,7 @@ export default function Header({
   onOpenAnalyticReport,
   onOpenDepthPressure
 }) {
-  const tabs = ['Dashboard', '3D View', 'Map View', 'Analytics', 'Alerts', 'Data Explorer', 'About'];
+  const tabs = ['Dashboard', '3D View', 'El Niño Simulation', 'Map View', 'Analytics', 'Alerts', 'Data Explorer', 'About'];
 
   return (
     <header className="h-16 px-5 border-b border-sky-500/20 bg-[#060f26]/90 backdrop-blur-md flex items-center justify-between z-30 select-none">
@@ -132,6 +132,20 @@ export default function Header({
           <span className="px-1.5 py-0.5 rounded bg-red-500/30 text-[9px] font-mono font-bold text-white">
             {activeRegion?.stormProbability ?? 75}%
           </span>
+        </button>
+
+        {/* El Niño Simulation Action Badge Button matching reference image */}
+        <button
+          onClick={() => setActiveTab('El Niño Simulation')}
+          title="Open Dedicated Equatorial Pacific ENSO / El Niño Digital Twin"
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer border ${
+            activeTab === 'El Niño Simulation'
+              ? 'bg-gradient-to-r from-red-600 to-orange-500 text-white border-orange-400 shadow-glow-orange'
+              : 'bg-red-950/60 hover:bg-red-900/80 text-orange-200 border-red-500/40 shadow-glow-red'
+          }`}
+        >
+          <span className="text-sm">🔥</span>
+          <span className="font-bold text-[11px]">El Niño Simulation</span>
         </button>
 
         {/* Night / Theme toggle */}

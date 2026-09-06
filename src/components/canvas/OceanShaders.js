@@ -9,6 +9,8 @@ export const OceanSurfaceShader = {
     uMode: { value: 1 },       // 0: Surface, 1: Depth Slice, 2: Volume, 3: Isosurface, 4: Vector Field
     uWaveSwell: { value: 1.0 }, // Multiplier for physical wave heights
     uSunDirection: { value: new THREE.Vector3(0.5, 1.0, 0.5).normalize() },
+    uEnsoPhase: { value: 1 }, // 0: Normal, 1: El Niño, 2: La Niña
+    uEnsoIntensity: { value: 0.75 }, // 0.0 to 1.0
   },
   vertexShader: `
     varying vec2 vUv;
@@ -60,6 +62,8 @@ export const OceanSurfaceShader = {
     uniform float uDepth;
     uniform int uMode;
     uniform float uWaveSwell;
+    uniform int uEnsoPhase;
+    uniform float uEnsoIntensity;
     
     varying vec2 vUv;
     varying vec3 vWorldPosition;
@@ -150,6 +154,17 @@ export const OceanSurfaceShader = {
       if (uParamType == 0) {
         val = 0.32 + warmCore * 0.68 + northPlume - coastalCooling;
         val = clamp(val - (uDepth / 6000.0) * 0.65, 0.0, 1.0);
+
+        // Dynamic El Niño / La Niña thermal anomaly modulation
+        if (uEnsoPhase == 1) {
+          // El Niño: Massive warm pool surge spreading eastward towards the eastern boundary (p.x > 0.0)
+          float elNinoTongue = smoothstep(-0.6, 0.7, p.x) * exp(-p.y * p.y * 3.5);
+          val = clamp(val + 0.16 * uEnsoIntensity + elNinoTongue * 0.44 * uEnsoIntensity, 0.0, 1.0);
+        } else if (uEnsoPhase == 2) {
+          // La Niña: Cold tongue upwelling strongly emerging in the eastern/central basin
+          float laNinaTongue = smoothstep(-0.3, 0.8, p.x) * exp(-p.y * p.y * 3.5);
+          val = clamp(val - 0.32 * uEnsoIntensity * laNinaTongue, 0.02, 1.0);
+        }
       } else if (uParamType == 1) {
         val = clamp(0.90 - northPlume * 2.5 + (1.0 - distToWarmCore) * 0.2, 0.0, 1.0);
       } else if (uParamType == 2) {
@@ -179,6 +194,17 @@ export const OceanSurfaceShader = {
       float streamlinePattern = sin(streamRadius * 48.0 + streamAngle * 8.0 - uTime * 3.0);
       float whiteStreamline = smoothstep(0.85, 0.98, streamlinePattern) * (0.35 + warmCore * 0.45);
 
+      // Add equatorial ENSO streamline flow pulses
+      if (uEnsoPhase == 1) {
+        // El Niño: Eastward surge (-> -> ->)
+        float ensoSurge = smoothstep(0.80, 0.99, sin(p.x * 24.0 - uTime * 4.5 * uEnsoIntensity)) * exp(-p.y * p.y * 4.5) * uEnsoIntensity;
+        whiteStreamline = max(whiteStreamline, ensoSurge * 0.85);
+      } else if (uEnsoPhase == 2) {
+        // La Niña: Accelerated westward trade wind flow (<- <- <-)
+        float laNinaSurge = smoothstep(0.80, 0.99, sin(-p.x * 28.0 - uTime * 5.0 * uEnsoIntensity)) * exp(-p.y * p.y * 4.5) * uEnsoIntensity;
+        whiteStreamline = max(whiteStreamline, laNinaSurge * 0.85);
+      }
+
       // Specular ocean sun sheen
       vec3 lightDir = normalize(vec3(0.3, 0.9, 0.5));
       vec3 viewDir = normalize(cameraPosition - vWorldPosition);
@@ -206,7 +232,9 @@ export const DepthWallShader = {
   uniforms: {
     uTime: { value: 0 },
     uParamType: { value: 0 },
-    uMaxDepth: { value: 6000.0 }
+    uMaxDepth: { value: 6000.0 },
+    uEnsoPhase: { value: 1 },
+    uEnsoIntensity: { value: 0.75 }
   },
   vertexShader: `
     varying vec2 vUv;
@@ -226,11 +254,24 @@ export const DepthWallShader = {
     varying float vDepthRatio;
     uniform int uParamType;
     uniform float uTime;
+    uniform int uEnsoPhase;
+    uniform float uEnsoIntensity;
 
     void main() {
       // Wavy stratification layer deformation matching reference image
       float waveLayer = sin(vUv.x * 12.0 + uTime * 0.6) * 0.018 + cos(vUv.x * 24.0) * 0.008;
-      float d = clamp(vDepthRatio + waveLayer, 0.0, 1.0);
+
+      // Realistic ENSO Thermocline Slope Tilt
+      float ensoTilt = 0.0;
+      if (uEnsoPhase == 1) {
+        // El Niño: Thermocline deepens in the eastern Pacific (right side vUv.x > 0.3), warm pool sloshes east
+        ensoTilt = (vUv.x - 0.25) * 0.12 * uEnsoIntensity;
+      } else if (uEnsoPhase == 2) {
+        // La Niña: Thermocline tilts steeply upward toward eastern surface, strong cold upwelling
+        ensoTilt = -(vUv.x - 0.5) * 0.16 * uEnsoIntensity;
+      }
+
+      float d = clamp(vDepthRatio - ensoTilt + waveLayer, 0.0, 1.0);
 
       // Vibrant stratification palette:
       // Epipelagic 0-100m: Fiery warm yellow/orange/red

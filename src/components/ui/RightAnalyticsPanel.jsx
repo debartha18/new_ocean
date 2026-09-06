@@ -7,13 +7,17 @@ import {
   Newspaper,
   FileText,
   Printer,
-  Gauge
+  Gauge,
+  Thermometer,
+  Wind,
+  Globe
 } from 'lucide-react';
 import { 
   IN_SITU_SUMMARY, 
   VALIDATION_TIME_SERIES, 
   VALIDATION_METRICS, 
-  AI_ANOMALY 
+  AI_ANOMALY,
+  ENSO_METRICS
 } from '../../data/oceanData';
 import { calculateHydrostaticPressure } from '../../utils/pressureCalculator';
 
@@ -24,7 +28,9 @@ export default function RightAnalyticsPanel({
   onOpenStormNews,
   onOpenAnalyticReport,
   onOpenDepthPressure,
-  depth = 50
+  depth = 50,
+  ensoState = { phase: 'elnino', intensity: 0.75 },
+  onFocusPacific
 }) {
   const chartW = 240;
   const chartH = 85;
@@ -124,6 +130,9 @@ export default function RightAnalyticsPanel({
           <ChevronRight className="w-4 h-4" />
         </button>
       </div>
+
+      {/* 0.55. ENSO STATUS Card matching user layout */}
+
 
       {/* 0.6. Subsurface Hydrostatic Pressure Card */}
       {(() => {

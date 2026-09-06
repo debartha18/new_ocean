@@ -14,6 +14,11 @@ import WorldMapView from './components/ui/WorldMapView';
 import OceanCanvas from './components/canvas/OceanCanvas';
 import AnalyticReportModal from './components/ui/AnalyticReportModal';
 import DepthPressureModal from './components/ui/DepthPressureModal';
+import DashboardView from './components/ui/DashboardView';
+import DataExplorerView from './components/ui/DataExplorerView';
+import AboutView from './components/ui/AboutView';
+import EnsoSimulationDock from './components/ui/EnsoSimulationDock';
+import EnsoSimulationView from './components/ui/EnsoSimulationView';
 import { REGIONS, createLocationData } from './data/oceanData';
 
 export default function App() {
@@ -25,6 +30,13 @@ export default function App() {
   const [isPlaying, setIsPlaying] = useState(true);
   const [simSpeed, setSimSpeed] = useState(1);
   const [selectedBuoy, setSelectedBuoy] = useState(null);
+
+  // Dynamic ENSO (El Niño / La Niña / Normal) Simulation State
+  const [ensoState, setEnsoState] = useState({
+    phase: 'elnino', // 'normal' | 'elnino' | 'lanina'
+    intensity: 0.75, // 0.1 to 1.0
+    isPlaying: true
+  });
 
   // Dynamic Location & Meteorological Threat State
   const [activeRegion, setActiveRegion] = useState(REGIONS.bay_of_bengal);
@@ -79,6 +91,13 @@ export default function App() {
     }
   };
 
+  const handleFocusPacific = () => {
+    if (REGIONS.equatorial_pacific) {
+      setActiveRegion(REGIONS.equatorial_pacific);
+      setActiveTab('3D View');
+    }
+  };
+
   return (
     <div className="relative w-screen h-screen bg-[#030712] text-slate-100 flex flex-col overflow-hidden select-none">
       {/* 1. Top Header Bar */}
@@ -96,8 +115,20 @@ export default function App() {
         onOpenDepthPressure={() => setIsDepthPressureOpen(true)}
       />
 
-      {/* 2. Main Central Workstation or Full World Map View */}
-      {activeTab === 'Map View' ? (
+      {/* 2. Main Central Workstation or Tabbed Views */}
+      {activeTab === 'Dashboard' ? (
+        <DashboardView
+          onSelectRegion={(reg) => {
+            setActiveRegion(reg);
+          }}
+          activeRegion={activeRegion}
+          onNavigateTab={(tab) => setActiveTab(tab)}
+          onOpenAnalyticReport={() => setIsAnalyticReportOpen(true)}
+          onOpenFleetModal={() => setIsFleetModalOpen(true)}
+          onOpenStormNews={() => setIsStormNewsModalOpen(true)}
+          onOpenAlerts={() => setIsAnomalyModalOpen(true)}
+        />
+      ) : activeTab === 'Map View' ? (
         <div className="relative flex-1 overflow-hidden">
           <WorldMapView
             activeRegion={activeRegion}
@@ -112,6 +143,23 @@ export default function App() {
             onBackTo3D={() => setActiveTab('3D View')}
           />
         </div>
+      ) : activeTab === 'Data Explorer' ? (
+        <DataExplorerView
+          onSelectRegion={(reg) => {
+            setActiveRegion(reg);
+            setActiveTab('3D View');
+          }}
+          onNavigateTab={(tab) => setActiveTab(tab)}
+        />
+      ) : activeTab === 'About' ? (
+        <AboutView
+          onNavigateTab={(tab) => setActiveTab(tab)}
+          onOpenAnalyticReport={() => setIsAnalyticReportOpen(true)}
+        />
+      ) : activeTab === 'El Niño Simulation' ? (
+        <EnsoSimulationView
+          onNavigateTab={(tab) => setActiveTab(tab)}
+        />
       ) : (
         <div className="relative flex-1 flex overflow-hidden">
           {/* Left Parameter, Location, Depth & Time Control Cockpit */}
@@ -149,6 +197,7 @@ export default function App() {
               selectedBuoy={selectedBuoy}
               isPlaying={isPlaying}
               simSpeed={simSpeed}
+              ensoState={ensoState}
             />
 
             {/* Floating Viewport HUD Overlays */}
@@ -176,15 +225,20 @@ export default function App() {
             onOpenAnalyticReport={() => setIsAnalyticReportOpen(true)}
             onOpenDepthPressure={() => setIsDepthPressureOpen(true)}
             depth={depth}
+            ensoState={ensoState}
+            onFocusPacific={() => setActiveTab('El Niño Simulation')}
           />
         </div>
       )}
 
-      {/* 3. Bottom 6-Parameter Strip */}
-      <BottomParameterStrip
-        selectedParam={selectedParam}
-        setSelectedParam={setSelectedParam}
-      />
+      {/* 3. Bottom 6-Parameter Strip (rendered on 3D View and Map View matching reference screenshot) */}
+      {(activeTab === '3D View' || activeTab === 'Map View') && (
+        <BottomParameterStrip
+          selectedParam={selectedParam}
+          setSelectedParam={setSelectedParam}
+          onNavigateToMap={() => setActiveTab('Map View')}
+        />
+      )}
 
       {/* 4. Interactive Modals */}
       <LocationModal

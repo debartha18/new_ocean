@@ -135,7 +135,8 @@ export default function OceanCanvas({
   onSelectBuoy,
   _selectedBuoy = null,
   isPlaying = true,
-  simSpeed = 1
+  simSpeed = 1,
+  ensoState = { phase: 'elnino', intensity: 0.75, isPlaying: true }
 }) {
   const containerRef = useRef(null);
   const sceneRef = useRef(null);
@@ -164,7 +165,8 @@ export default function OceanCanvas({
     isStormLayerActive,
     onSelectBuoy,
     isPlaying,
-    simSpeed
+    simSpeed,
+    ensoState
   });
 
   useEffect(() => {
@@ -173,7 +175,8 @@ export default function OceanCanvas({
       isStormLayerActive,
       onSelectBuoy,
       isPlaying,
-      simSpeed
+      simSpeed,
+      ensoState
     };
   });
 
@@ -269,7 +272,9 @@ export default function OceanCanvas({
       uDepth: { value: 50.0 },
       uMode: { value: 1 },
       uWaveSwell: { value: 1.0 },
-      uSunDirection: { value: new THREE.Vector3(0.5, 1.0, 0.5).normalize() }
+      uSunDirection: { value: new THREE.Vector3(0.5, 1.0, 0.5).normalize() },
+      uEnsoPhase: { value: 1 },
+      uEnsoIntensity: { value: 0.75 }
     };
     uniformsRef.current = oceanUniforms;
 
@@ -288,7 +293,9 @@ export default function OceanCanvas({
     const depthWallUniforms = {
       uTime: { value: 0 },
       uParamType: { value: 0 },
-      uMaxDepth: { value: 6000.0 }
+      uMaxDepth: { value: 6000.0 },
+      uEnsoPhase: { value: 1 },
+      uEnsoIntensity: { value: 0.75 }
     };
     depthWallUniformsRef.current = depthWallUniforms;
 
@@ -647,6 +654,14 @@ export default function OceanCanvas({
       if (uniformsRef.current.uTime) uniformsRef.current.uTime.value = elapsed;
       if (depthWallUniformsRef.current.uTime) depthWallUniformsRef.current.uTime.value = elapsed;
 
+      // Real-time ENSO Phase & Intensity Uniform Updates
+      const ensoPhaseVal = currentProps.ensoState?.phase === 'elnino' ? 1 : currentProps.ensoState?.phase === 'lanina' ? 2 : 0;
+      const ensoIntensityVal = currentProps.ensoState?.intensity ?? 0.75;
+      if (uniformsRef.current.uEnsoPhase) uniformsRef.current.uEnsoPhase.value = ensoPhaseVal;
+      if (uniformsRef.current.uEnsoIntensity) uniformsRef.current.uEnsoIntensity.value = ensoIntensityVal;
+      if (depthWallUniformsRef.current.uEnsoPhase) depthWallUniformsRef.current.uEnsoPhase.value = ensoPhaseVal;
+      if (depthWallUniformsRef.current.uEnsoIntensity) depthWallUniformsRef.current.uEnsoIntensity.value = ensoIntensityVal;
+
       // Animate 3D Storm, Hurricane & Tornado Funnels
       if (stormGroupRef.current) {
         const stormProb = currentProps.activeRegion?.stormProbability ?? 75;
@@ -718,26 +733,57 @@ export default function OceanCanvas({
         }
       }
 
-      // Streamline particles
+      // Streamline particles with ENSO physical flow advection
       if (particlesRef.current) {
         const { mesh, count } = particlesRef.current;
         const pos = mesh.geometry.attributes.position;
+        const ensoPhase = currentProps.ensoState?.phase || 'elnino';
+        const ensoIntensity = currentProps.ensoState?.intensity ?? 0.75;
+        const isEnsoPlaying = currentProps.ensoState?.isPlaying ?? true;
+        const activeSpeedMult = isEnsoPlaying ? speedMult : 0;
 
         for (let i = 0; i < count; i++) {
-          const dx = pos.getX(i) - 0.28;
-          const dz = pos.getZ(i) + 0.05;
-          const dist = Math.sqrt(dx * dx + dz * dz) + 0.06;
+          if (ensoPhase === 'elnino') {
+            // El Niño: Reversal / Eastward Kelvin wave surge (→ → →)
+            const speed = (0.007 + ensoIntensity * 0.009 + Math.sin(elapsed * 2.5 + i * 0.1) * 0.001) * activeSpeedMult;
+            let nx = pos.getX(i) + speed;
+            let nz = pos.getZ(i) + Math.sin(nx * 5.0 + elapsed) * 0.0008;
 
-          const speed = (0.0045 + (1.0 / dist) * 0.0012) * speedMult;
-          const nx = pos.getX(i) - (dz / dist) * speed;
-          const nz = pos.getZ(i) + (dx / dist) * speed;
-
-          if (Math.abs(nx) > oceanWidth * 0.44 || Math.abs(nz) > oceanDepth * 0.44) {
-            pos.setX(i, (Math.random() - 0.5) * (oceanWidth * 0.75));
-            pos.setZ(i, (Math.random() - 0.5) * (oceanDepth * 0.75));
-          } else {
+            if (nx > oceanWidth * 0.44) {
+              nx = -oceanWidth * 0.44;
+              nz = (Math.random() - 0.5) * (oceanDepth * 0.82);
+            }
             pos.setX(i, nx);
             pos.setZ(i, nz);
+          } else if (ensoPhase === 'lanina') {
+            // La Niña: Supercharged westward trade wind flow (← ← ←)
+            const speed = (0.009 + ensoIntensity * 0.009) * activeSpeedMult;
+            let nx = pos.getX(i) - speed;
+            let nz = pos.getZ(i) + Math.sin(nx * 5.0 + elapsed) * 0.0008;
+
+            if (nx < -oceanWidth * 0.44) {
+              nx = oceanWidth * 0.44;
+              nz = (Math.random() - 0.5) * (oceanDepth * 0.82);
+            }
+            pos.setX(i, nx);
+            pos.setZ(i, nz);
+          } else {
+            // Normal: Standard Subtropical Gyre Circulation
+            const dx = pos.getX(i) - 0.28;
+            const dz = pos.getZ(i) + 0.05;
+            const dist = Math.sqrt(dx * dx + dz * dz) + 0.06;
+
+            const speed = (0.0045 + (1.0 / dist) * 0.0012) * speedMult;
+            const nx = pos.getX(i) - (dz / dist) * speed;
+            const nz = pos.getZ(i) + (dx / dist) * speed;
+
+            if (Math.abs(nx) > oceanWidth * 0.44 || Math.abs(nz) > oceanDepth * 0.44) {
+              pos.setX(i, (Math.random() - 0.5) * (oceanWidth * 0.75));
+              pos.setZ(i, (Math.random() - 0.5) * (oceanDepth * 0.75));
+            } else {
+              pos.setX(i, nx);
+              pos.setZ(i, nz);
+            }
           }
         }
         pos.needsUpdate = true;

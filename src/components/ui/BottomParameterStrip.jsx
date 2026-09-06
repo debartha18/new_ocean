@@ -1,84 +1,127 @@
 import React from 'react';
 import { PARAMETERS } from '../../data/oceanData';
-import { generateParameterThumbnail } from '../canvas/proceduralTextures';
-import { Plus, Minus } from 'lucide-react';
 
-export default function BottomParameterStrip({ selectedParam, setSelectedParam }) {
+export default function BottomParameterStrip({ 
+  selectedParam, 
+  setSelectedParam, 
+  onNavigateToMap 
+}) {
+  const parameterConfigs = [
+    {
+      id: 'sst',
+      title: 'Sea Surface Temperature (°C)',
+      min: '0',
+      max: '32',
+      gradient: 'linear-gradient(to right, #001f3f, #0074D9, #00d2be, #2ECC40, #FFDC00, #FF851B, #FF4136)'
+    },
+    {
+      id: 'salinity',
+      title: 'Salinity (PSU)',
+      min: '30',
+      max: '40',
+      gradient: 'linear-gradient(to right, #051e3e, #0f4c81, #1b98e0, #56cbf9, #00ffc8)'
+    },
+    {
+      id: 'currents',
+      title: 'Ocean Currents (m/s)',
+      min: '0',
+      max: '2.0',
+      isArrows: true
+    },
+    {
+      id: 'wave',
+      title: 'Wave Height (m)',
+      min: '0',
+      max: '6',
+      gradient: 'linear-gradient(to right, #1e1b4b, #4338ca, #8b5cf6, #ec4899, #f43f5e)'
+    },
+    {
+      id: 'chlorophyll',
+      title: 'Chlorophyll-a (mg/m³)',
+      min: '0.01',
+      max: '10',
+      gradient: 'linear-gradient(to right, #022c22, #065f46, #059669, #10b981, #a3e635, #fef08a)'
+    },
+    {
+      id: 'oxygen',
+      title: 'Dissolved Oxygen (mg/L)',
+      min: '0',
+      max: '10',
+      gradient: 'linear-gradient(to right, #4a044e, #701a75, #0284c7, #06b6d4, #67e8f9)'
+    }
+  ];
+
   return (
-    <footer className="h-28 px-5 pb-3 pt-1 flex items-center justify-between gap-3 z-30 select-none">
-      {/* 1. 6-Parameter Quick Preview Cards */}
-      <div className="flex items-center gap-2.5 flex-1 overflow-x-auto py-1">
-        {Object.values(PARAMETERS).map((param) => {
+    <footer className="h-20 px-4 py-1.5 flex items-center justify-between gap-2.5 z-30 select-none bg-[#03081a]/95 border-t border-sky-500/20 backdrop-blur-md">
+      {/* 1. 6-Parameter Quick Preview Cards matching reference screenshot */}
+      <div className="flex items-center gap-2 flex-1 overflow-x-auto py-0.5">
+        {parameterConfigs.map((param) => {
           const isSelected = selectedParam === param.id;
-          const thumbUrl = generateParameterThumbnail(param.id);
 
           return (
             <button
               key={param.id}
               onClick={() => setSelectedParam(param.id)}
-              className={`relative flex-1 min-w-[145px] max-w-[195px] h-20 rounded-2xl p-2.5 text-left transition-all duration-200 overflow-hidden flex flex-col justify-between ${
+              className={`relative flex-1 min-w-[140px] max-w-[200px] h-[64px] rounded-xl p-2 text-left transition-all duration-200 overflow-hidden flex flex-col justify-between cursor-pointer ${
                 isSelected
-                  ? 'glass-panel glow-border-cyan border-cyan-400/80 scale-[1.02]'
-                  : 'glass-panel-subtle hover:border-sky-500/40 opacity-80 hover:opacity-100'
+                  ? 'bg-[#081d48]/95 border border-cyan-400 shadow-glow-cyan scale-[1.01]'
+                  : 'bg-[#05112e]/70 hover:bg-[#08183d]/90 border border-sky-500/25 hover:border-sky-500/50'
               }`}
             >
-              {/* Background Thumbnail Image */}
-              <div 
-                className="absolute inset-0 bg-cover bg-center opacity-40 rounded-2xl pointer-events-none"
-                style={{ backgroundImage: `url(${thumbUrl})` }}
-              />
-
-              {/* Title & Unit */}
+              {/* Header Title */}
               <div className="relative z-10 flex items-center justify-between">
-                <span className={`text-[11px] font-bold truncate leading-tight ${isSelected ? 'text-white' : 'text-slate-200'}`}>
-                  {param.name}
-                </span>
-                <span className={`text-[10px] font-mono px-1 rounded ${isSelected ? 'bg-cyan-500/30 text-cyan-200' : 'text-slate-400'}`}>
-                  {param.unit}
+                <span className={`text-[10px] font-bold truncate leading-tight ${isSelected ? 'text-cyan-300' : 'text-slate-200'}`}>
+                  {param.title}
                 </span>
               </div>
 
-              {/* Gradient Preview Line */}
-              <div className="relative z-10 w-full">
-                <div
-                  className="h-1.5 w-full rounded-full border border-white/20 shadow-inner"
-                  style={{ background: param.gradientCss }}
-                />
+              {/* Visualization / Gradient Bar */}
+              <div className="relative z-10 w-full my-0.5">
+                {param.isArrows ? (
+                  <div className="flex items-center justify-center gap-2 py-0.5 text-cyan-400 text-xs font-mono font-bold tracking-wider">
+                    <span>—→</span>
+                    <span>-››</span>
+                    <span>-›››</span>
+                    <span className="text-cyan-300">»»»</span>
+                  </div>
+                ) : (
+                  <div
+                    className="h-2 w-full rounded-full border border-white/15 shadow-inner"
+                    style={{ background: param.gradient }}
+                  />
+                )}
+              </div>
+
+              {/* Min - Max Scale Labels */}
+              <div className="relative z-10 flex items-center justify-between text-[8.5px] font-mono text-slate-400">
+                <span>{param.min}</span>
+                <span>{param.max}</span>
               </div>
             </button>
           );
         })}
       </div>
 
-      {/* 2. Interactive Global / Regional Mini-Map */}
-      <div className="relative w-64 h-20 rounded-2xl glass-panel border border-sky-500/30 overflow-hidden flex items-center justify-center shadow-cockpit group">
-        {/* Realistic Satellite Texture for Indian Ocean */}
-        <div className="absolute inset-0 bg-[#07193b]">
-          <svg viewBox="0 0 200 80" className="w-full h-full opacity-75">
-            {/* Indian Subcontinent */}
-            <path d="M 40 10 L 80 8 L 95 25 L 75 65 L 60 70 L 45 45 Z" fill="#2d422a" stroke="#4ade80" strokeWidth="0.8" />
-            {/* Myanmar / Indochina */}
-            <path d="M 115 15 L 140 12 L 148 40 L 140 70 L 125 55 L 120 30 Z" fill="#2d422a" stroke="#4ade80" strokeWidth="0.8" />
-            {/* Sri Lanka */}
-            <circle cx="68" cy="72" r="3" fill="#365332" />
-            {/* Andaman Islands */}
-            <path d="M 118 42 L 120 58" stroke="#4ade80" strokeWidth="1.5" strokeDasharray="2 2" />
-          </svg>
+      {/* 2. Interactive Global Mini-Map matching reference screenshot */}
+      <div 
+        onClick={onNavigateToMap}
+        title="Click to switch to World Satellite Map"
+        className="relative w-40 h-[64px] rounded-xl border border-sky-500/30 overflow-hidden flex flex-col items-center justify-between p-1 shadow-cockpit bg-[#040e24] cursor-pointer hover:border-cyan-400 transition-all group"
+      >
+        <div className="w-full flex items-center justify-between text-[8.5px] font-mono text-slate-300 px-1">
+          <span className="font-bold group-hover:text-cyan-300 transition-colors">Mini Map</span>
+          <span className="text-cyan-400 group-hover:underline">Global</span>
         </div>
 
-        {/* Active Viewport Bounding Box (Bay of Bengal) */}
-        <div className="absolute left-[36%] top-[16%] w-[32%] h-[68%] border-2 border-cyan-400 rounded bg-cyan-500/20 shadow-glow-cyan flex items-center justify-center animate-pulse">
-          <span className="text-[8px] font-mono text-cyan-200 font-bold tracking-tighter">Active</span>
-        </div>
-
-        {/* Mini-map Controls */}
-        <div className="absolute top-1 right-1 flex flex-col gap-1 z-10">
-          <button className="p-1 rounded bg-[#061026]/90 text-sky-300 hover:text-white border border-sky-500/20 text-[10px]">
-            <Plus className="w-3 h-3" />
-          </button>
-          <button className="p-1 rounded bg-[#061026]/90 text-sky-300 hover:text-white border border-sky-500/20 text-[10px]">
-            <Minus className="w-3 h-3" />
-          </button>
+        {/* Satellite Map thumbnail */}
+        <div className="relative w-full flex-1 rounded-md overflow-hidden border border-sky-500/20 bg-[#020714]">
+          <img 
+            src="/world_map_satellite.jpg" 
+            alt="Mini Map" 
+            className="w-full h-full object-cover opacity-80 pointer-events-none group-hover:scale-105 transition-transform duration-300"
+          />
+          {/* Active Viewport Bounding Box */}
+          <div className="absolute left-[24%] top-[18%] w-[52%] h-[64%] border border-cyan-400 border-dashed rounded bg-cyan-400/20 pointer-events-none animate-pulse" />
         </div>
       </div>
     </footer>

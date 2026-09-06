@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useMemo } from 'react';
 import { 
   Globe, 
   MapPin, 
@@ -10,7 +10,10 @@ import {
   Search, 
   CloudRain, 
   Compass,
-  Umbrella
+  Umbrella,
+  Layers,
+  Plus,
+  Minus
 } from 'lucide-react';
 import { REGIONS } from '../../data/oceanData';
 import { COASTAL_BEACHES, calculateBeachRainForecast } from '../../data/beachData';
@@ -23,54 +26,34 @@ export default function WorldMapView({
   onBackTo3D 
 }) {
   const [pinnedLocation, setPinnedLocation] = useState(null);
-  const [mapLayer, setMapLayer] = useState('currents'); // 'currents', 'sst', 'storms', 'buoys', 'beaches'
+  const [mapLayer, setMapLayer] = useState('Currents'); // 'Currents', 'SST', 'Waves', 'Salinity', 'Active Cyclones', 'Sensor Fleet'
   const [zoom, setZoom] = useState(1);
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
-  const [hoverCoords, setHoverCoords] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
   const [selectedBeach, setSelectedBeach] = useState(null);
+  const [isLegendOpen, setIsLegendOpen] = useState(true);
+
+  // Live Inspector Coordinates (Default: 13.32° N, 166.32° E as in reference image)
+  const [inspectorData, setInspectorData] = useState({
+    lat: 13.32,
+    lon: 166.32,
+    depth: 5606,
+    pressure: '5772.54 dbar (569.71 atm)',
+    sst: 28.6,
+    salinity: 34.7,
+    oxygen: 5.8,
+    chlorophyll: 0.21,
+    waveHeight: 1.35,
+    windSpeed: 6.2,
+    windDir: '215° SW'
+  });
 
   const containerRef = useRef(null);
 
-  // Global Ocean Coordinates presets & buoy clusters across the world
-  const globalFleet = [
-    { id: 'F-01', name: 'Bay of Bengal Deep Mooring BD08', lat: 15.3, lon: 87.9, region: 'bay_of_bengal', type: 'mooredBuoy' },
-    { id: 'F-02', name: 'Arabian Sea PIRATA Node AD02', lat: 18.4, lon: 66.8, region: 'arabian_sea', type: 'mooredBuoy' },
-    { id: 'F-03', name: 'South China Sea Basin Buoy 01', lat: 14.5, lon: 114.2, region: 'south_china_sea', type: 'mooredBuoy' },
-    { id: 'F-04', name: 'Gulf of Mexico NDBC 42001', lat: 25.0, lon: -90.0, region: 'gulf_of_mexico', type: 'mooredBuoy' },
-    { id: 'F-05', name: 'North Atlantic Deep Buoy 41040', lat: 38.0, lon: -42.0, region: 'north_atlantic', type: 'mooredBuoy' },
-    { id: 'F-06', name: 'Equatorial Pacific TAO TRITON', lat: 0.0, lon: -140.0, region: 'equatorial_pacific', type: 'mooredBuoy' },
-    { id: 'F-07', name: 'Southern Ocean Antarctic Array', lat: -55.0, lon: 90.0, region: 'bay_of_bengal', type: 'argoFloat' },
-    { id: 'F-08', name: 'Japan Trench Subduction Float', lat: 35.5, lon: 142.0, region: 'south_china_sea', type: 'argoFloat' },
-    { id: 'F-09', name: 'Canary Current SVP Drifter', lat: 28.0, lon: -18.0, region: 'north_atlantic', type: 'driftingBuoy' }
-  ];
-
-  // Active Cyclones across the World
-  const globalCyclones = [
-    { name: 'Cyclone REMAL', cat: 'Cat 3', lat: 16.5, lon: 88.2, region: 'bay_of_bengal', wind: '135 km/h' },
-    { name: 'Typhoon YAGI', cat: 'Cat 4', lat: 15.8, lon: 115.4, region: 'south_china_sea', wind: '160 km/h' },
-    { name: 'Hurricane BERYL', cat: 'Cat 3', lat: 24.5, lon: -89.2, region: 'gulf_of_mexico', wind: '145 km/h' },
-    { name: 'Cyclone TEJ', cat: 'Cat 2', lat: 14.2, lon: 60.5, region: 'arabian_sea', wind: '110 km/h' }
-  ];
-
-  // Ocean Current Streamlines
-  const oceanCurrents = [
-    { name: 'Gulf Stream', path: 'M 250 200 Q 350 140 500 120', color: '#f87171' },
-    { name: 'North Atlantic Drift', path: 'M 500 120 Q 600 90 700 80', color: '#f87171' },
-    { name: 'Kuroshio Current', path: 'M 750 240 Q 820 180 900 160', color: '#f87171' },
-    { name: 'Equatorial Countercurrent', path: 'M 100 245 L 900 245', color: '#fb923c' },
-    { name: 'California Current', path: 'M 160 140 Q 180 200 210 240', color: '#38bdf8' },
-    { name: 'Humboldt / Peru Current', path: 'M 250 420 Q 240 320 260 260', color: '#38bdf8' },
-    { name: 'Benguela Current', path: 'M 480 400 Q 460 300 480 240', color: '#38bdf8' },
-    { name: 'Agulhas Current', path: 'M 590 280 Q 570 360 520 420', color: '#f87171' },
-    { name: 'Indian Monsoon Drift', path: 'M 670 230 Q 730 220 800 240', color: '#fb923c' },
-    { name: 'Antarctic Circumpolar Current', path: 'M 50 460 L 950 460', color: '#38bdf8' }
-  ];
-
-  // Transform lat/lon into SVG canvas coordinates (Mercator / Equirectangular projection)
+  // Transform lat/lon into SVG canvas coordinates (2000 x 1000 standard equirectangular)
   const geoToSvg = (lat, lon) => {
     const x = ((lon + 180) / 360) * 1000;
     const y = ((90 - lat) / 180) * 500;
@@ -81,10 +64,231 @@ export default function WorldMapView({
     const lon = (svgX / 1000) * 360 - 180;
     const lat = 90 - (svgY / 500) * 180;
     return {
-      lat: parseFloat(lat.toFixed(3)),
-      lon: parseFloat(lon.toFixed(3))
+      lat: parseFloat(lat.toFixed(2)),
+      lon: parseFloat(lon.toFixed(2))
     };
   };
+
+  // Fixed Station Cards matching the reference image exactly
+  const stationCards = [
+    {
+      id: 'st_46001',
+      name: 'Station 46001',
+      lat: 28.2,
+      lon: -145.6,
+      cardX: 68,
+      cardY: 155,
+      cardW: 64,
+      cardH: 46,
+      color: '#eab308',
+      type: 'inSitu',
+      metrics: ['28.2 °N, 145.6 °W', 'SST: 26.1 °C', 'Wave: 1.2 m']
+    },
+    {
+      id: 'st_equatorial_pacific',
+      name: 'Equatorial Pacific (El Niño Basin)',
+      lat: 0.0,
+      lon: -140.0,
+      cardX: 52,
+      cardY: 238,
+      cardW: 106,
+      cardH: 33,
+      color: '#0284c7',
+      type: 'inSitu',
+      metrics: ['SST: 29.8 °C', 'Current: 0.17 m/s']
+    },
+    {
+      id: 'st_55012',
+      name: 'Station 55012',
+      lat: -32.4,
+      lon: -123.7,
+      cardX: 154,
+      cardY: 318,
+      cardW: 66,
+      cardH: 46,
+      color: '#a855f7',
+      type: 'drifter',
+      metrics: ['32.4 °S, 123.7 °W', 'SST: 18.7 °C', 'Wave: 2.1 m']
+    },
+    {
+      id: 'st_62019',
+      name: 'Station 62019',
+      lat: 48.3,
+      lon: -12.6,
+      cardX: 415,
+      cardY: 120,
+      cardW: 64,
+      cardH: 46,
+      color: '#10b981',
+      type: 'argo',
+      metrics: ['48.3 °N, 12.6 °W', 'SST: 17.3 °C', 'Wave: 1.8 m']
+    },
+    {
+      id: 'st_north_atlantic',
+      name: 'North Atlantic Ocean',
+      lat: 35.0,
+      lon: -40.0,
+      cardX: 326,
+      cardY: 165,
+      cardW: 78,
+      cardH: 33,
+      color: '#38bdf8',
+      type: 'inSitu',
+      metrics: ['SST: 22.4 °C', 'Current: 0.34 m/s']
+    },
+    {
+      id: 'st_bay_of_bengal',
+      name: 'Bay of Bengal',
+      lat: 15.3,
+      lon: 87.9,
+      cardX: 688,
+      cardY: 180,
+      cardW: 62,
+      cardH: 33,
+      color: '#00f0ff',
+      type: 'inSitu',
+      metrics: ['SST: 28.9 °C', 'Current: 0.42 m/s']
+    },
+    {
+      id: 'st_arabian_sea',
+      name: 'Arabian Sea',
+      lat: 18.4,
+      lon: 66.8,
+      cardX: 778,
+      cardY: 235,
+      cardW: 65,
+      cardH: 33,
+      color: '#f97316',
+      type: 'wave',
+      metrics: ['SST: 29.1 °C', 'Current: 0.49 m/s']
+    },
+    {
+      id: 'st_71023',
+      name: 'Station 71023',
+      lat: -41.2,
+      lon: 86.8,
+      cardX: 615,
+      cardY: 365,
+      cardW: 65,
+      cardH: 46,
+      color: '#818cf8',
+      type: 'drifter',
+      metrics: ['41.2 °S, 86.8 °E', 'SST: 12.4 °C', 'Wave: 2.4 m']
+    },
+    {
+      id: 'st_80045',
+      name: 'Station 80045',
+      lat: -20.5,
+      lon: 114.3,
+      cardX: 815,
+      cardY: 345,
+      cardW: 65,
+      cardH: 46,
+      color: '#eab308',
+      type: 'inSitu',
+      metrics: ['20.5 °S, 114.3 °E', 'SST: 24.6 °C', 'Wave: 1.6 m']
+    }
+  ];
+
+  // Buoy Fleet Markers Array with various types matching the legend
+  const buoyFleet = [
+    // Indian Ocean & Arabian Sea cluster
+    { id: 'b-01', lat: 12.5, lon: 74.5, type: 'tide', color: '#38bdf8' },
+    { id: 'b-02', lat: 8.8, lon: 76.5, type: 'wave', color: '#f97316' },
+    { id: 'b-03', lat: 14.8, lon: 82.2, type: 'inSitu', color: '#eab308' },
+    { id: 'b-04', lat: 17.5, lon: 86.5, type: 'argo', color: '#10b981' },
+    { id: 'b-05', lat: 11.2, lon: 92.8, type: 'drifter', color: '#a855f7' },
+    { id: 'b-06', lat: 5.5, lon: 80.5, type: 'tide', color: '#38bdf8' },
+    { id: 'b-07', lat: 21.0, lon: 68.2, type: 'wave', color: '#f97316' },
+    { id: 'b-08', lat: 16.0, lon: 63.5, type: 'argo', color: '#10b981' },
+    { id: 'b-09', lat: 19.5, lon: 89.0, type: 'inSitu', color: '#eab308' },
+    { id: 'b-10', lat: 2.0, lon: 68.0, type: 'drifter', color: '#a855f7' },
+    { id: 'b-11', lat: -5.0, lon: 85.0, type: 'argo', color: '#10b981' },
+    { id: 'b-12', lat: -12.0, lon: 65.0, type: 'wave', color: '#f97316' },
+    { id: 'b-13', lat: -25.0, lon: 75.0, type: 'drifter', color: '#a855f7' },
+    { id: 'b-14', lat: 22.5, lon: 38.5, type: 'tide', color: '#38bdf8' }, // Red Sea
+    { id: 'b-15', lat: 26.0, lon: 52.0, type: 'inSitu', color: '#eab308' }, // Persian Gulf
+
+    // Pacific Cluster
+    { id: 'b-16', lat: 22.0, lon: -157.0, type: 'wave', color: '#f97316' }, // Hawaii
+    { id: 'b-17', lat: 34.0, lon: -121.0, type: 'tide', color: '#38bdf8' }, // California
+    { id: 'b-18', lat: -15.0, lon: -175.0, type: 'drifter', color: '#a855f7' }, // Fiji
+    { id: 'b-19', lat: 15.0, lon: 135.0, type: 'argo', color: '#10b981' }, // Philippine Sea
+    { id: 'b-20', lat: 32.0, lon: 135.0, type: 'inSitu', color: '#eab308' }, // Japan south
+    { id: 'b-21', lat: -35.0, lon: 152.0, type: 'wave', color: '#f97316' }, // Sydney
+    { id: 'b-22', lat: -42.0, lon: 172.0, type: 'tide', color: '#38bdf8' }, // New Zealand
+
+    // Atlantic Cluster
+    { id: 'b-23', lat: 25.0, lon: -70.0, type: 'argo', color: '#10b981' },
+    { id: 'b-24', lat: 15.0, lon: -45.0, type: 'drifter', color: '#a855f7' },
+    { id: 'b-25', lat: 0.0, lon: -25.0, type: 'inSitu', color: '#eab308' },
+    { id: 'b-26', lat: -15.0, lon: -10.0, type: 'wave', color: '#f97316' },
+    { id: 'b-27', lat: 36.0, lon: -5.0, type: 'tide', color: '#38bdf8' }, // Gibraltar
+    { id: 'b-28', lat: 55.0, lon: -30.0, type: 'argo', color: '#10b981' }
+  ];
+
+  // Ocean Currents matching the reference map with directional arrows
+  const warmCurrents = [
+    {
+      id: 'gulf_stream',
+      name: 'Gulf Stream',
+      path: 'M 230 205 Q 310 160 450 120',
+      labelX: 275,
+      labelY: 195
+    },
+    {
+      id: 'north_equatorial',
+      name: 'North Equatorial Current',
+      path: 'M 470 270 Q 380 270 290 260',
+      labelX: 350,
+      labelY: 258
+    },
+    {
+      id: 'agulhas_current',
+      name: 'Agulhas Current',
+      path: 'M 600 240 Q 590 320 540 375',
+      labelX: 615,
+      labelY: 305
+    },
+    {
+      id: 'west_australian',
+      name: 'West Australian Current Drift',
+      path: 'M 785 380 Q 770 340 780 320',
+      labelX: 740,
+      labelY: 355
+    }
+  ];
+
+  const coldCurrents = [
+    {
+      id: 'antarctic_circumpolar',
+      name: 'Antarctic Circumpolar Current',
+      path: 'M 150 400 Q 250 415 350 405 T 550 400 T 750 390 T 900 420',
+      labelX: 420,
+      labelY: 395
+    },
+    {
+      id: 'california_current',
+      name: 'California Current',
+      path: 'M 160 140 Q 170 180 195 210',
+      labelX: 180,
+      labelY: 165
+    },
+    {
+      id: 'humboldt_current',
+      name: 'Humboldt / Peru Current',
+      path: 'M 255 420 Q 240 340 260 270',
+      labelX: 245,
+      labelY: 360
+    },
+    {
+      id: 'benguela_current',
+      name: 'Benguela Current',
+      path: 'M 480 370 Q 460 300 480 240',
+      labelX: 470,
+      labelY: 320
+    }
+  ];
 
   const handleMouseDown = (e) => {
     if (e.button !== 0) return;
@@ -105,16 +309,32 @@ export default function WorldMapView({
       const clickX = e.clientX - rect.left;
       const clickY = e.clientY - rect.top;
 
-      // Transform taking into account zoom and pan
       const svgX = (clickX - pan.x) / zoom;
       const svgY = (clickY - pan.y) / zoom;
 
       if (svgX >= 0 && svgX <= 1000 && svgY >= 0 && svgY <= 500) {
         const geo = svgToGeo(svgX, svgY);
-        // Estimate bathymetry: deeper in open oceans (~3800m), shallow near equator/coasts
-        const depthEst = Math.max(30, Math.round(3500 + Math.sin(geo.lat * 0.1) * 1800 - Math.cos(geo.lon * 0.05) * 800));
+        // Deterministic realistic bathymetry
+        const depthEst = Math.max(45, Math.round(4800 + Math.sin(geo.lat * 0.1) * 2100 - Math.cos(geo.lon * 0.05) * 900));
         const pressureEst = calculateHydrostaticPressure(depthEst, geo.lat);
-        setHoverCoords({ ...geo, depth: depthEst, pressure: pressureEst });
+        const sstEst = Math.max(2.1, Math.min(31.2, 30.2 - Math.pow(Math.abs(geo.lat) / 68, 1.8) * 27));
+        const salinityEst = (33.5 + Math.sin(Math.abs(geo.lat) * 0.08) * 3.2).toFixed(1);
+
+        setInspectorData({
+          lat: Math.abs(geo.lat),
+          latDir: geo.lat >= 0 ? 'N' : 'S',
+          lon: Math.abs(geo.lon),
+          lonDir: geo.lon >= 0 ? 'E' : 'W',
+          depth: depthEst,
+          pressure: `${pressureEst.dbar.toFixed(2)} dbar (${pressureEst.atm.toFixed(2)} atm)`,
+          sst: sstEst.toFixed(1),
+          salinity: salinityEst,
+          oxygen: (5.4 + Math.cos(geo.lat * 0.1) * 1.5).toFixed(1),
+          chlorophyll: (0.15 + Math.abs(Math.sin(geo.lon * 0.2)) * 0.35).toFixed(2),
+          waveHeight: (1.2 + Math.abs(Math.sin(geo.lat * 0.15)) * 1.6).toFixed(2),
+          windSpeed: (5.5 + Math.abs(Math.sin(geo.lon * 0.1)) * 3.8).toFixed(1),
+          windDir: '215° SW'
+        });
       }
     }
   };
@@ -134,15 +354,15 @@ export default function WorldMapView({
 
       if (svgX >= 0 && svgX <= 1000 && svgY >= 0 && svgY <= 500) {
         const geo = svgToGeo(svgX, svgY);
-        const depthEst = Math.max(50, Math.round(3200 + Math.sin(geo.lat * 0.1) * 1600));
-        const pressureInfo = calculateHydrostaticPressure(depthEst, geo.lat);
-        setPinnedLocation({ ...geo, depth: depthEst, pressure: pressureInfo });
+        const depthEst = Math.max(45, Math.round(4800 + Math.sin(geo.lat * 0.1) * 2100));
+        const pressureEst = calculateHydrostaticPressure(depthEst, geo.lat);
+        setPinnedLocation({ ...geo, depth: depthEst, pressure: pressureEst });
       }
     }
   };
 
   const handleZoom = (delta) => {
-    setZoom((prev) => Math.min(4, Math.max(1, parseFloat((prev + delta).toFixed(1)))));
+    setZoom((prev) => Math.min(4.5, Math.max(1, parseFloat((prev + delta).toFixed(1)))));
   };
 
   const handleResetZoom = () => {
@@ -247,48 +467,59 @@ export default function WorldMapView({
     }
   };
 
+  // Viewport calculation for the mini-map rectangle
+  const miniMapBox = useMemo(() => {
+    const normZoom = zoom;
+    const boxW = Math.max(15, 100 / normZoom);
+    const boxH = Math.max(12, 50 / normZoom);
+    const boxX = Math.max(0, Math.min(100 - boxW, 50 - (pan.x / 10) / normZoom - boxW / 2));
+    const boxY = Math.max(0, Math.min(50 - boxH, 25 - (pan.y / 10) / normZoom - boxH / 2));
+    return { x: boxX, y: boxY, w: boxW, h: boxH };
+  }, [zoom, pan]);
+
   return (
     <div className="relative w-full h-full flex flex-col bg-[#030712] overflow-hidden select-none animate-in fade-in duration-200">
-      {/* Top Map Control Bar */}
-      <div className="h-16 px-6 border-b border-sky-500/20 bg-[#061026]/90 backdrop-blur-md flex items-center justify-between z-20 gap-4">
+      {/* 1. Top Subheader Map Control Bar */}
+      <div className="h-14 px-5 border-b border-sky-500/20 bg-[#061026]/90 backdrop-blur-md flex items-center justify-between z-20 gap-3">
+        {/* Left: Back button & Title */}
         <div className="flex items-center gap-3">
           <button
             onClick={onBackTo3D}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-sky-500/10 hover:bg-sky-500/20 text-xs font-semibold text-cyan-300 border border-sky-500/20 transition-all cursor-pointer"
           >
-            <ArrowLeft className="w-4 h-4" />
+            <ArrowLeft className="w-3.5 h-3.5" />
             <span>Back to 3D Twin</span>
           </button>
-          <div className="h-5 w-px bg-sky-500/20" />
+          <div className="h-4 w-px bg-sky-500/20" />
           <div className="flex items-center gap-2">
             <Globe className="w-4 h-4 text-cyan-400" />
-            <h2 className="text-sm font-bold text-white hidden sm:block">
+            <h2 className="text-xs md:text-sm font-bold text-white hidden sm:block">
               Global Ocean Digital Twin Map & Beach Radar
             </h2>
           </div>
         </div>
 
-        {/* Search Bar */}
+        {/* Center: Search Box */}
         <div className="relative flex-1 max-w-xs">
           <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#09183d] border border-sky-500/30 text-xs text-sky-200">
             <Search className="w-3.5 h-3.5 text-cyan-400" />
             <input
               type="text"
-              placeholder="Search beach or ocean basin..."
+              placeholder="Search ocean or beach..."
               value={searchQuery}
               onChange={(e) => handleSearch(e.target.value)}
-              className="bg-transparent border-none outline-none text-white text-xs w-full placeholder-slate-400"
+              className="bg-transparent border-none outline-none text-white text-xs w-full placeholder-slate-400 font-normal"
             />
           </div>
 
           {/* Search Dropdown */}
           {searchResults.length > 0 && (
-            <div className="absolute top-12 left-0 right-0 bg-[#071536] border border-sky-500/40 rounded-xl shadow-2xl p-2 z-30 max-h-60 overflow-y-auto">
+            <div className="absolute top-11 left-0 right-0 bg-[#071536] border border-sky-500/40 rounded-xl shadow-2xl p-1.5 z-40 max-h-56 overflow-y-auto">
               {searchResults.map((res, i) => (
                 <button
                   key={i}
                   onClick={() => handleSelectSearchResult(res)}
-                  className="w-full text-left p-2 rounded-lg hover:bg-sky-500/20 text-xs flex items-center justify-between transition-colors text-slate-200"
+                  className="w-full text-left p-2 rounded-lg hover:bg-sky-500/20 text-xs flex items-center justify-between transition-colors text-slate-200 cursor-pointer"
                 >
                   <div className="flex items-center gap-2">
                     {res.type === 'beach' ? (
@@ -307,191 +538,219 @@ export default function WorldMapView({
           )}
         </div>
 
-        {/* Layer Switches */}
-        <div className="hidden lg:flex items-center gap-1.5 bg-[#09183d] p-1 rounded-xl border border-sky-500/20">
-          {[
-            { id: 'currents', label: 'Currents' },
-            { id: 'beaches', label: 'Beaches & Rain' },
-            { id: 'sst', label: 'Thermal SST' },
-            { id: 'storms', label: 'Active Cyclones' },
-            { id: 'buoys', label: 'Sensor Fleet' }
-          ].map((layer) => (
-            <button
-              key={layer.id}
-              onClick={() => setMapLayer(layer.id)}
-              className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all ${
-                mapLayer === layer.id
-                  ? 'bg-cyan-500 text-slate-950 font-bold shadow-glow-cyan'
-                  : 'text-slate-300 hover:text-white hover:bg-sky-500/10'
-              }`}
-            >
-              {layer.label}
-            </button>
-          ))}
-        </div>
+        {/* Right: Layer Pills & Zoom Tools */}
+        <div className="flex items-center gap-2">
+          <div className="hidden xl:flex items-center gap-1 bg-[#09183d] p-1 rounded-xl border border-sky-500/20">
+            {['Currents', 'SST', 'Waves', 'Salinity', 'Active Cyclones', 'Sensor Fleet'].map((layer) => (
+              <button
+                key={layer}
+                onClick={() => setMapLayer(layer)}
+                className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                  mapLayer === layer
+                    ? 'bg-cyan-500 text-slate-950 font-bold shadow-glow-cyan'
+                    : 'text-slate-300 hover:text-white hover:bg-sky-500/10'
+                }`}
+              >
+                {layer}
+              </button>
+            ))}
+          </div>
 
-        {/* Zoom & Reset Controls */}
-        <div className="flex items-center gap-1 bg-[#09183d] p-1 rounded-xl border border-sky-500/20">
-          <button
-            onClick={() => handleZoom(0.3)}
-            title="Zoom In"
-            className="p-1.5 rounded-lg hover:bg-sky-500/20 text-cyan-300"
-          >
-            <ZoomIn className="w-4 h-4" />
-          </button>
-          <button
-            onClick={() => handleZoom(-0.3)}
-            title="Zoom Out"
-            className="p-1.5 rounded-lg hover:bg-sky-500/20 text-cyan-300"
-          >
-            <ZoomOut className="w-4 h-4" />
-          </button>
-          <button
-            onClick={handleResetZoom}
-            title="Reset Map"
-            className="p-1.5 rounded-lg hover:bg-sky-500/20 text-cyan-300"
-          >
-            <RotateCcw className="w-4 h-4" />
-          </button>
+          <div className="flex items-center gap-1 bg-[#09183d] p-1 rounded-xl border border-sky-500/20">
+            <button
+              onClick={() => handleZoom(0.3)}
+              title="Zoom In"
+              className="p-1.5 rounded-lg hover:bg-sky-500/20 text-cyan-300 cursor-pointer"
+            >
+              <ZoomIn className="w-3.5 h-3.5" />
+            </button>
+            <button
+              onClick={() => handleZoom(-0.3)}
+              title="Zoom Out"
+              className="p-1.5 rounded-lg hover:bg-sky-500/20 text-cyan-300 cursor-pointer"
+            >
+              <ZoomOut className="w-3.5 h-3.5" />
+            </button>
+            <button
+              onClick={handleResetZoom}
+              title="Reset Map"
+              className="p-1.5 rounded-lg hover:bg-sky-500/20 text-cyan-300 cursor-pointer"
+            >
+              <RotateCcw className="w-3.5 h-3.5" />
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* Main Map Surface */}
+      {/* 2. Main Map Viewport Surface */}
       <div 
-        className="relative flex-1 bg-[#02091a] overflow-hidden flex items-center justify-center p-3"
+        className="relative flex-1 bg-[#020713] overflow-hidden flex items-center justify-center p-2 md:p-3 select-none"
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
       >
-        {/* SVG Container */}
+        {/* SVG Container with NASA Satellite Basemap */}
         <div 
           ref={containerRef}
           onClick={handleMapClick}
-          className="relative w-full h-full max-w-[1450px] max-h-[750px] rounded-3xl glass-panel border border-sky-500/30 overflow-hidden shadow-2xl bg-[#030d24] cursor-crosshair"
+          className="relative w-full h-full max-w-[1550px] max-h-[820px] rounded-3xl border border-sky-500/30 overflow-hidden shadow-2xl bg-[#030919] cursor-crosshair"
         >
           <svg 
             viewBox="0 0 1000 500" 
-            className="w-full h-full transition-transform duration-75"
+            className="w-full h-full"
             style={{
               transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
               transformOrigin: '500px 250px'
             }}
           >
             <defs>
-              <pattern id="worldGrid" width="50" height="50" patternUnits="userSpaceOnUse">
-                <path d="M 50 0 L 0 0 0 50" fill="none" stroke="rgba(56, 189, 248, 0.08)" strokeWidth="0.8" />
-              </pattern>
-              <radialGradient id="cycloneGlow" cx="50%" cy="50%" r="50%">
+              {/* Cyclone Radar Gradient */}
+              <radialGradient id="cyclonePulse" cx="50%" cy="50%" r="50%">
                 <stop offset="0%" stopColor="#ef4444" stopOpacity="0.8" />
-                <stop offset="50%" stopColor="#f97316" stopOpacity="0.3" />
+                <stop offset="60%" stopColor="#f97316" stopOpacity="0.25" />
                 <stop offset="100%" stopColor="transparent" stopOpacity="0" />
               </radialGradient>
-              <radialGradient id="beachRainGlow" cx="50%" cy="50%" r="50%">
-                <stop offset="0%" stopColor="#38bdf8" stopOpacity="0.8" />
-                <stop offset="100%" stopColor="transparent" stopOpacity="0" />
-              </radialGradient>
+              {/* Arrow Marker for Warm Currents */}
+              <marker id="arrowWarm" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="4" markerHeight="4" orient="auto-start-reverse">
+                <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#ef4444" />
+              </marker>
+              {/* Arrow Marker for Cold Currents */}
+              <marker id="arrowCold" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="4" markerHeight="4" orient="auto-start-reverse">
+                <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#38bdf8" />
+              </marker>
             </defs>
 
-            {/* Ocean Floor Grid */}
-            <rect width="1000" height="500" fill="url(#worldGrid)" />
-
-            {/* Ocean Basins Bathymetric Tinting (Deep Abyssal Zones) */}
-            <circle cx="200" cy="300" r="120" fill="rgba(2, 28, 68, 0.4)" />
-            <circle cx="450" cy="200" r="90" fill="rgba(2, 28, 68, 0.4)" />
-            <circle cx="700" cy="300" r="140" fill="rgba(2, 28, 68, 0.4)" />
-            <circle cx="900" cy="300" r="130" fill="rgba(2, 28, 68, 0.4)" />
-
-            {/* Equator & Latitudinal Grid Lines */}
-            <line x1="0" y1="250" x2="1000" y2="250" stroke="rgba(0, 240, 255, 0.35)" strokeWidth="1" strokeDasharray="5 5" />
-            <text x="15" y="245" fill="rgba(0, 240, 255, 0.6)" fontSize="9" fontFamily="monospace">Equator 0°</text>
-
-            <line x1="0" y1="185" x2="1000" y2="185" stroke="rgba(255, 255, 255, 0.15)" strokeWidth="0.8" strokeDasharray="3 3" />
-            <text x="15" y="180" fill="rgba(255, 255, 255, 0.4)" fontSize="8" fontFamily="monospace">Tropic of Cancer 23.5° N</text>
-
-            <line x1="0" y1="315" x2="1000" y2="315" stroke="rgba(255, 255, 255, 0.15)" strokeWidth="0.8" strokeDasharray="3 3" />
-            <text x="15" y="310" fill="rgba(255, 255, 255, 0.4)" fontSize="8" fontFamily="monospace">Tropic of Capricorn 23.5° S</text>
-
-            {/* Prime Meridian & Longitude 0° */}
-            <line x1="500" y1="0" x2="500" y2="500" stroke="rgba(255, 255, 255, 0.15)" strokeWidth="0.8" strokeDasharray="4 4" />
-            <text x="505" y="15" fill="rgba(255, 255, 255, 0.4)" fontSize="8" fontFamily="monospace">0° Meridian</text>
-
-            {/* Continental Shelf & Coastline Polygons */}
-            {/* North America */}
-            <path 
-              d="M 100 80 L 160 55 L 240 60 L 290 85 L 300 130 L 255 190 L 220 230 L 180 200 L 160 170 L 120 160 L 90 120 Z" 
-              fill="#132a1c" 
-              stroke="#2e5c38" 
-              strokeWidth="1.2" 
+            {/* A. PHOTOREALISTIC NASA BLUE MARBLE SATELLITE BASEMAP */}
+            <image 
+              href="/world_map_satellite.jpg" 
+              x="0" 
+              y="0" 
+              width="1000" 
+              height="500" 
+              preserveAspectRatio="none"
+              className="opacity-90"
             />
-            {/* South America */}
-            <path 
-              d="M 270 250 L 335 270 L 365 330 L 340 420 L 295 460 L 270 410 L 255 330 L 245 280 Z" 
-              fill="#132a1c" 
-              stroke="#2e5c38" 
-              strokeWidth="1.2" 
-            />
-            {/* Europe */}
-            <path 
-              d="M 460 70 L 530 65 L 560 90 L 580 130 L 530 160 L 480 155 L 450 120 Z" 
-              fill="#1a3522" 
-              stroke="#3b7348" 
-              strokeWidth="1.2" 
-            />
-            {/* Africa */}
-            <path 
-              d="M 460 170 L 570 170 L 610 240 L 590 320 L 550 390 L 480 360 L 435 250 L 440 190 Z" 
-              fill="#2b2716" 
-              stroke="#544c2c" 
-              strokeWidth="1.2" 
-            />
-            {/* Asia (mainland) */}
-            <path 
-              d="M 580 60 L 820 45 L 910 120 L 910 190 L 860 240 L 810 270 L 760 270 L 680 230 L 630 170 L 590 120 Z" 
-              fill="#1b3623" 
-              stroke="#3b7348" 
-              strokeWidth="1.2" 
-            />
-            {/* Indian Subcontinent (Enhanced detailed peninsula) */}
-            <path 
-              d="M 680 170 L 740 170 L 755 210 L 735 260 L 710 285 L 685 240 Z" 
-              fill="#3a522f" 
-              stroke="#5e874d" 
-              strokeWidth="1.5" 
-            />
-            {/* Japan */}
-            <path d="M 880 140 Q 900 165 890 190" fill="none" stroke="#5e874d" strokeWidth="2.5" />
-            {/* Southeast Asia & Indonesia Archipelago */}
-            <path d="M 770 270 L 810 320 L 860 320" fill="none" stroke="#5e874d" strokeWidth="2" strokeDasharray="5 3" />
-            {/* Australia */}
-            <path 
-              d="M 780 320 L 880 310 L 910 370 L 860 420 L 790 410 L 760 360 Z" 
-              fill="#382c1a" 
-              stroke="#5e492b" 
-              strokeWidth="1.2" 
-            />
-            {/* Antarctica */}
-            <path d="M 30 480 L 970 480 L 970 500 L 30 500 Z" fill="#475569" stroke="#94a3b8" strokeWidth="1" />
 
-            {/* Ocean Current Flow Lines Layer */}
-            {(mapLayer === 'currents' || mapLayer === 'sst') && (
-              <g opacity="0.8">
-                {oceanCurrents.map((cur, i) => (
-                  <g key={i}>
+            {/* Subtle dark ocean border vignette */}
+            <rect width="1000" height="500" fill="none" stroke="rgba(2, 6, 23, 0.4)" strokeWidth="10" />
+
+            {/* B. LONGITUDINAL MERIDIAN LINES & LABELS */}
+            {[
+              { x: 0, label: '180°W' },
+              { x: 166.7, label: '120°W' },
+              { x: 333.3, label: '60°W' },
+              { x: 500, label: '0° Meridian' },
+              { x: 666.7, label: '60°E' },
+              { x: 833.3, label: '120°E' },
+              { x: 1000, label: '180°E' }
+            ].map((m, idx) => (
+              <g key={idx}>
+                <line
+                  x1={m.x}
+                  y1={0}
+                  x2={m.x}
+                  y2={500}
+                  stroke="rgba(255, 255, 255, 0.12)"
+                  strokeWidth="0.75"
+                  strokeDasharray="3 3"
+                />
+                <text
+                  x={m.x === 0 ? 8 : m.x === 1000 ? 992 : m.x}
+                  y="12"
+                  fill="rgba(255, 255, 255, 0.6)"
+                  fontSize="7.5"
+                  fontFamily="monospace"
+                  textAnchor={m.x === 0 ? 'start' : m.x === 1000 ? 'end' : 'middle'}
+                  className="pointer-events-none"
+                >
+                  {m.label}
+                </text>
+              </g>
+            ))}
+
+            {/* C. LATITUDINAL CIRCLES & LABELS */}
+            {/* Arctic Circle 66.5° N */}
+            <line x1="0" y1="65.3" x2="1000" y2="65.3" stroke="rgba(56, 189, 248, 0.3)" strokeWidth="0.8" strokeDasharray="3 3" />
+            <text x="980" y="62" fill="rgba(56, 189, 248, 0.75)" fontSize="7" fontFamily="monospace" textAnchor="end">Arctic Circle 66.5° N</text>
+
+            {/* 60° N */}
+            <line x1="0" y1="83.3" x2="1000" y2="83.3" stroke="rgba(255, 255, 255, 0.12)" strokeWidth="0.6" strokeDasharray="2 2" />
+            <text x="12" y="81" fill="rgba(255, 255, 255, 0.5)" fontSize="7" fontFamily="monospace">60°N</text>
+
+            {/* 30° N */}
+            <line x1="0" y1="166.7" x2="1000" y2="166.7" stroke="rgba(255, 255, 255, 0.12)" strokeWidth="0.6" strokeDasharray="2 2" />
+            <text x="12" y="164" fill="rgba(255, 255, 255, 0.5)" fontSize="7" fontFamily="monospace">30°N</text>
+
+            {/* Tropic of Cancer 23.5° N */}
+            <line x1="0" y1="184.7" x2="1000" y2="184.7" stroke="rgba(255, 255, 255, 0.2)" strokeWidth="0.8" strokeDasharray="4 3" />
+            <text x="920" y="181" fill="rgba(255, 255, 255, 0.65)" fontSize="7" fontFamily="monospace" textAnchor="end">Tropic of Cancer 23.5° N</text>
+
+            {/* 0° Equator (Yellow Dashed Line) */}
+            <line x1="0" y1="250" x2="1000" y2="250" stroke="#f59e0b" strokeWidth="1.2" strokeDasharray="5 4" opacity="0.85" />
+            <text x="12" y="247" fill="#fbbf24" fontSize="8" fontFamily="monospace" fontWeight="bold">0° Equator</text>
+            <text x="920" y="247" fill="#fbbf24" fontSize="8" fontFamily="monospace" fontWeight="bold" textAnchor="end">Equator 0°</text>
+
+            {/* Tropic of Capricorn 23.5° S */}
+            <line x1="0" y1="315.3" x2="1000" y2="315.3" stroke="rgba(255, 255, 255, 0.2)" strokeWidth="0.8" strokeDasharray="4 3" />
+            <text x="910" y="312" fill="rgba(255, 255, 255, 0.65)" fontSize="7" fontFamily="monospace" textAnchor="end">Tropic of Capricorn 23.5° S</text>
+
+            {/* 30° S */}
+            <line x1="0" y1="333.3" x2="1000" y2="333.3" stroke="rgba(255, 255, 255, 0.12)" strokeWidth="0.6" strokeDasharray="2 2" />
+            <text x="12" y="331" fill="rgba(255, 255, 255, 0.5)" fontSize="7" fontFamily="monospace">30°S</text>
+
+            {/* Antarctic Circle 66.5° S */}
+            <line x1="0" y1="434.7" x2="1000" y2="434.7" stroke="rgba(56, 189, 248, 0.3)" strokeWidth="0.8" strokeDasharray="3 3" />
+            <text x="950" y="432" fill="rgba(56, 189, 248, 0.75)" fontSize="7" fontFamily="monospace" textAnchor="end">Antarctic Circle 66.5° S</text>
+
+            {/* D. OCEAN CURRENTS (Warm: Red dashed with arrows, Cold: Blue dashed with arrows) */}
+            {(mapLayer === 'Currents' || mapLayer === 'Waves' || mapLayer === 'SST') && (
+              <g className="pointer-events-none">
+                {/* Warm currents */}
+                {warmCurrents.map((cur) => (
+                  <g key={cur.id}>
                     <path
                       d={cur.path}
                       fill="none"
-                      stroke={cur.color}
-                      strokeWidth="2.5"
-                      strokeDasharray="6 4"
-                      className="animate-pulse"
+                      stroke="#ef4444"
+                      strokeWidth="1.8"
+                      strokeDasharray="5 3"
+                      markerMid="url(#arrowWarm)"
+                      markerEnd="url(#arrowWarm)"
+                      opacity="0.85"
                     />
                     <text
-                      x={cur.path.split(' ')[1]}
-                      y={parseFloat(cur.path.split(' ')[2]) - 6}
-                      fill={cur.color}
-                      fontSize="7"
-                      fontFamily="monospace"
-                      fontWeight="bold"
+                      x={cur.labelX}
+                      y={cur.labelY}
+                      fill="#fca5a5"
+                      fontSize="6.5"
+                      fontFamily="sans-serif"
+                      fontWeight="600"
+                    >
+                      {cur.name}
+                    </text>
+                  </g>
+                ))}
+
+                {/* Cold currents */}
+                {coldCurrents.map((cur) => (
+                  <g key={cur.id}>
+                    <path
+                      d={cur.path}
+                      fill="none"
+                      stroke="#38bdf8"
+                      strokeWidth="1.8"
+                      strokeDasharray="5 3"
+                      markerMid="url(#arrowCold)"
+                      markerEnd="url(#arrowCold)"
+                      opacity="0.85"
+                    />
+                    <text
+                      x={cur.labelX}
+                      y={cur.labelY}
+                      fill="#bae6fd"
+                      fontSize="6.5"
+                      fontFamily="sans-serif"
+                      fontWeight="600"
                     >
                       {cur.name}
                     </text>
@@ -500,206 +759,298 @@ export default function WorldMapView({
               </g>
             )}
 
-            {/* Major Ocean Basin Cards */}
-            {Object.values(REGIONS).map((reg) => {
-              const pos = geoToSvg(reg.lat, reg.lon);
-              const isActive = activeRegion.id === reg.id;
+            {/* E. SENSOR FLEET BUOY PINS (Categorized dots matching legend) */}
+            {(mapLayer === 'Sensor Fleet' || mapLayer === 'Currents' || mapLayer === 'Salinity') && (
+              <g className="cursor-pointer">
+                {buoyFleet.map((buoy) => {
+                  const pos = geoToSvg(buoy.lat, buoy.lon);
+                  return (
+                    <g key={buoy.id} className="hover:scale-125 transition-transform">
+                      <circle cx={pos.x} cy={pos.y} r="5.5" fill={buoy.color} opacity="0.3" />
+                      <circle cx={pos.x} cy={pos.y} r="3" fill={buoy.color} stroke="#ffffff" strokeWidth="0.8" />
+                    </g>
+                  );
+                })}
+              </g>
+            )}
+
+            {/* F. ACTIVE CYCLONES OVERLAY */}
+            {(mapLayer === 'Active Cyclones' || mapLayer === 'Currents') && (
+              <g className="cursor-pointer">
+                {[
+                  { name: 'Cyclone REMAL', cat: 'Cat 3', lat: 16.5, lon: 88.2 },
+                  { name: 'Typhoon YAGI', cat: 'Cat 4', lat: 15.8, lon: 115.4 }
+                ].map((storm, idx) => {
+                  const pos = geoToSvg(storm.lat, storm.lon);
+                  return (
+                    <g key={idx} className="animate-pulse">
+                      <circle cx={pos.x} cy={pos.y} r="22" fill="url(#cyclonePulse)" />
+                      <circle cx={pos.x} cy={pos.y} r="6" fill="#ef4444" stroke="#ffffff" strokeWidth="1.2" />
+                      <text x={pos.x + 8} y={pos.y - 3} fill="#fca5a5" fontSize="7.5" fontFamily="sans-serif" fontWeight="bold">
+                        {storm.name} ({storm.cat})
+                      </text>
+                    </g>
+                  );
+                })}
+              </g>
+            )}
+
+            {/* G. STATION CARDS (Glass cards matching reference image layout) */}
+            {stationCards.map((st) => {
+              const pos = geoToSvg(st.lat, st.lon);
+              const cardX = st.cardX ?? (pos.x - 45);
+              const cardY = st.cardY ?? (pos.y - 25);
+              const cardW = st.cardW ?? 75;
+              const cardH = st.cardH ?? (24 + st.metrics.length * 9);
+              const isActive = activeRegion && st.name.toLowerCase().includes(activeRegion.name.toLowerCase());
+
               return (
-                <g 
-                  key={reg.id} 
-                  onClick={(e) => { 
-                    e.stopPropagation(); 
-                    onSelectRegion(reg); 
-                    onBackTo3D(); 
+                <g
+                  key={st.id}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    const reg = Object.values(REGIONS).find((r) => r.name.toLowerCase().includes(st.name.toLowerCase()));
+                    if (reg) {
+                      onSelectRegion(reg);
+                      onBackTo3D();
+                    } else {
+                      setPinnedLocation({ lat: st.lat, lon: st.lon, name: st.name, depth: 3200 });
+                    }
                   }}
-                  className="cursor-pointer"
+                  className="cursor-pointer hover:scale-105 transition-transform"
                 >
-                  <rect
-                    x={pos.x - 42}
-                    y={pos.y - 25}
-                    width="84"
-                    height="50"
-                    rx="10"
-                    fill={isActive ? 'rgba(0, 240, 255, 0.3)' : 'rgba(14, 165, 233, 0.15)'}
-                    stroke={isActive ? '#00f0ff' : '#0284c7'}
-                    strokeWidth={isActive ? '2' : '1'}
-                    className="hover:fill-cyan-500/35 transition-all"
+                  {/* Subtle connection line from dot to card */}
+                  <line
+                    x1={pos.x}
+                    y1={pos.y}
+                    x2={pos.x < cardX ? cardX : pos.x > cardX + cardW ? cardX + cardW : cardX + cardW / 2}
+                    y2={pos.y < cardY ? cardY : pos.y > cardY + cardH ? cardY + cardH : cardY + cardH / 2}
+                    stroke={st.color}
+                    strokeWidth="0.8"
+                    strokeDasharray="2 2"
+                    opacity="0.55"
                   />
+
+                  {/* Station Location Pin Dot */}
+                  <circle cx={pos.x} cy={pos.y} r={isActive ? 4.5 : 3.5} fill={isActive ? '#00f0ff' : st.color} stroke="#ffffff" strokeWidth="0.8" />
+
+                  {/* Glassmorphic Station Card */}
+                  <rect
+                    x={cardX}
+                    y={cardY}
+                    width={cardW}
+                    height={cardH}
+                    rx="4"
+                    fill="rgba(4, 14, 34, 0.88)"
+                    stroke={isActive ? '#00f0ff' : st.color}
+                    strokeWidth={isActive ? '1.5' : '1'}
+                    className="shadow-lg backdrop-blur-md"
+                  />
+
+                  {/* Title Icon and Name */}
+                  <circle cx={cardX + 6.5} cy={cardY + 8} r="2.2" fill={st.color} />
                   <text
-                    x={pos.x}
-                    y={pos.y - 6}
-                    fill={isActive ? '#00f0ff' : '#ffffff'}
-                    fontSize="10"
+                    x={cardX + 11.5}
+                    y={cardY + 10}
+                    fill="#ffffff"
+                    fontSize="6.5"
                     fontFamily="sans-serif"
                     fontWeight="bold"
-                    textAnchor="middle"
-                    className="pointer-events-none"
                   >
-                    {reg.name}
+                    {st.name.length > 25 ? st.name.slice(0, 25) + '...' : st.name}
                   </text>
-                  <text
-                    x={pos.x}
-                    y={pos.y + 8}
-                    fill="#38bdf8"
-                    fontSize="8"
-                    fontFamily="monospace"
-                    textAnchor="middle"
-                    className="pointer-events-none"
-                  >
-                    SST: {reg.sst}°C • {reg.waveHeight}m
-                  </text>
+
+                  {/* Metrics text lines */}
+                  {st.metrics.map((metric, mIdx) => (
+                    <text
+                      key={mIdx}
+                      x={cardX + 6.5}
+                      y={cardY + 19 + mIdx * 8.5}
+                      fill="#93c5fd"
+                      fontSize="5.5"
+                      fontFamily="monospace"
+                    >
+                      {metric}
+                    </text>
+                  ))}
                 </g>
               );
             })}
 
-            {/* Coastal Beaches & Near-Sea Rain Forecast Layer */}
-            {(mapLayer === 'beaches' || mapLayer === 'currents') &&
-              COASTAL_BEACHES.map((bch) => {
-                const pos = geoToSvg(bch.lat, bch.lon);
-                const forecast = calculateBeachRainForecast(bch);
-                const isSelected = selectedBeach?.beachId === bch.id;
-
-                return (
-                  <g
-                    key={bch.id}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setSelectedBeach(forecast);
-                      setPinnedLocation({ lat: bch.lat, lon: bch.lon, name: bch.name, depth: 30 });
-                    }}
-                    className="cursor-pointer group"
-                  >
-                    {forecast.rainProbability > 60 && (
-                      <circle cx={pos.x} cy={pos.y} r="12" fill="url(#beachRainGlow)" className="animate-ping" />
-                    )}
-                    <circle
-                      cx={pos.x}
-                      cy={pos.y}
-                      r={isSelected ? 6 : 4}
-                      fill={forecast.safetyFlag.includes('Red') ? '#ef4444' : forecast.safetyFlag.includes('Yellow') ? '#f59e0b' : '#38bdf8'}
-                      stroke="#ffffff"
-                      strokeWidth="1.2"
-                    />
-                    <text
-                      x={pos.x + 6}
-                      y={pos.y + 3}
-                      fill="#f1f5f9"
-                      fontSize="7"
-                      fontFamily="sans-serif"
-                      fontWeight="bold"
-                      className="pointer-events-none"
-                    >
-                      {bch.name.split(' ')[0]} ({forecast.rainProbability}% 🌧)
-                    </text>
-                  </g>
-                );
-              })}
-
-            {/* Active Cyclones Layer */}
-            {(mapLayer === 'storms' || mapLayer === 'currents') &&
-              globalCyclones.map((cyclone, idx) => {
-                const pos = geoToSvg(cyclone.lat, cyclone.lon);
-                return (
-                  <g key={idx} className="cursor-pointer animate-pulse">
-                    <circle cx={pos.x} cy={pos.y} r="28" fill="url(#cycloneGlow)" />
-                    <circle cx={pos.x} cy={pos.y} r="8" fill="#ef4444" stroke="#ffffff" strokeWidth="1.5" />
-                    <text x={pos.x + 12} y={pos.y - 4} fill="#fca5a5" fontSize="9" fontFamily="sans-serif" fontWeight="bold">
-                      {cyclone.name} ({cyclone.cat})
-                    </text>
-                    <text x={pos.x + 12} y={pos.y + 7} fill="#fdba74" fontSize="7" fontFamily="monospace">
-                      {cyclone.wind}
-                    </text>
-                  </g>
-                );
-              })}
-
-            {/* Global Buoy Fleet Markers Layer */}
-            {(mapLayer === 'buoys' || mapLayer === 'currents') &&
-              globalFleet.map((buoy) => {
-                const pos = geoToSvg(buoy.lat, buoy.lon);
-                return (
-                  <g key={buoy.id} className="cursor-pointer">
-                    <circle cx={pos.x} cy={pos.y} r="4" fill="#facc15" stroke="#000000" strokeWidth="1" />
-                  </g>
-                );
-              })}
-
-            {/* User Dropped Pin Marker */}
+            {/* H. PINNED TARGET COORDINATES MARKER */}
             {pinnedLocation && (() => {
               const pos = geoToSvg(pinnedLocation.lat, pinnedLocation.lon);
               return (
-                <g className="animate-bounce">
-                  <circle cx={pos.x} cy={pos.y} r="9" fill="#00f0ff" stroke="#ffffff" strokeWidth="2" />
-                  <line x1={pos.x} y1={pos.y - 24} x2={pos.x} y2={pos.y} stroke="#00f0ff" strokeWidth="2.5" />
+                <g className="animate-bounce pointer-events-none">
+                  <circle cx={pos.x} cy={pos.y} r="8" fill="#00f0ff" stroke="#ffffff" strokeWidth="2" />
+                  <line x1={pos.x} y1={pos.y - 22} x2={pos.x} y2={pos.y} stroke="#00f0ff" strokeWidth="2.5" />
                 </g>
               );
             })()}
           </svg>
-        </div>
 
-        {/* Real-time Cursor Coordinate & Bathymetric Pressure Inspector HUD (Bottom Left) */}
-        {hoverCoords && (
-          <div className="absolute bottom-6 left-6 glass-panel p-3 rounded-2xl border border-sky-500/30 text-xs font-mono shadow-cockpit z-30 pointer-events-none">
-            <div className="flex items-center gap-2 text-cyan-300 font-bold mb-1">
-              <Compass className="w-3.5 h-3.5 text-cyan-400" />
-              <span>Inspector: {hoverCoords.lat}° {hoverCoords.lat >= 0 ? 'N' : 'S'}, {hoverCoords.lon}° {hoverCoords.lon >= 0 ? 'E' : 'W'}</span>
-            </div>
-            <div className="text-slate-300 flex items-center gap-3">
-              <span>Bathymetry: <b className="text-white">{hoverCoords.depth}m</b></span>
-              <span>Pressure: <b className="text-amber-300">{hoverCoords.pressure?.dbar} dbar</b> ({hoverCoords.pressure?.atm} atm)</span>
-            </div>
-          </div>
-        )}
+          {/* 3. FLOATING OVERLAYS (Exact match to reference image) */}
 
-        {/* Pinned Location & Beach Weather Forecast Card (Bottom Right) */}
-        {pinnedLocation && (
-          <div className="absolute bottom-6 right-6 glass-panel p-4 rounded-2xl border border-cyan-400/50 shadow-glow-cyan z-30 max-w-sm bg-[#05112e]/95">
-            <div className="flex items-center justify-between mb-2">
-              <div className="flex items-center gap-2 text-xs font-bold text-cyan-300">
-                <MapPin className="w-4 h-4 text-cyan-400" />
-                <span>{pinnedLocation.name || 'Custom Target Coordinates'}</span>
-              </div>
+          {/* A. LEGEND (Top Right) */}
+          <div className="absolute top-4 right-4 bg-[#05112e]/90 backdrop-blur-md p-3.5 rounded-2xl border border-sky-500/30 text-xs shadow-2xl z-30 min-w-[140px]">
+            <div className="flex items-center justify-between font-bold text-white tracking-wider text-[11px] mb-2 uppercase border-b border-sky-500/20 pb-1">
+              <span>LEGEND</span>
               <button 
-                onClick={() => { setPinnedLocation(null); setSelectedBeach(null); }}
-                className="text-slate-400 hover:text-white text-xs"
+                onClick={() => setIsLegendOpen(!isLegendOpen)}
+                className="text-slate-400 hover:text-white text-[10px]"
               >
-                ✕
+                {isLegendOpen ? '–' : '+'}
               </button>
             </div>
 
-            <div className="text-sm font-mono font-bold text-white mb-2">
-              {pinnedLocation.lat}° {pinnedLocation.lat >= 0 ? 'N' : 'S'}, {pinnedLocation.lon}° {pinnedLocation.lon >= 0 ? 'E' : 'W'}
-            </div>
+            {isLegendOpen && (
+              <div className="flex flex-col gap-1.5 text-[10px] text-slate-200">
+                <div className="flex items-center gap-2">
+                  <span className="w-2.5 h-2.5 rounded-full bg-[#eab308]" />
+                  <span>In-situ Station</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="w-2.5 h-2.5 rounded-full bg-[#a855f7]" />
+                  <span>Drifter Buoy</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="w-2.5 h-2.5 rounded-full bg-[#10b981]" />
+                  <span>Argo Float</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="w-2.5 h-2.5 rounded-full bg-[#38bdf8]" />
+                  <span>Tide Gauge</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="w-2.5 h-2.5 rounded-full bg-[#f97316]" />
+                  <span>Wave Buoy</span>
+                </div>
 
-            {/* If a beach was clicked, show beach rain forecast */}
-            {selectedBeach ? (
-              <div className="mb-3 p-2.5 rounded-xl bg-[#091d4a] border border-sky-500/20">
-                <div className="flex items-center justify-between text-xs mb-1">
-                  <span className="font-bold text-amber-300 flex items-center gap-1">
-                    <CloudRain className="w-3.5 h-3.5" />
-                    <span>Rain: {selectedBeach.rainProbability}% ({selectedBeach.total24hPrecipMm} mm)</span>
-                  </span>
-                  <span className="text-[10px] font-mono text-cyan-300">Swell: {selectedBeach.surfWaveHeight}m</span>
+                <div className="h-px bg-sky-500/20 my-1" />
+
+                <div className="text-[9px] uppercase font-bold text-slate-400">Ocean Currents</div>
+                <div className="flex items-center gap-2">
+                  <span className="w-4 h-0.5 border-t-2 border-dashed border-red-500" />
+                  <span>Warm Current</span>
                 </div>
-                <div className="text-[11px] text-slate-300 italic">
-                  {selectedBeach.advisoryText}
+                <div className="flex items-center gap-2">
+                  <span className="w-4 h-0.5 border-t-2 border-dashed border-sky-400" />
+                  <span>Cold Current</span>
                 </div>
-              </div>
-            ) : (
-              <div className="mb-3 text-[11px] text-slate-300 font-mono">
-                Seafloor Bathymetry: ~{pinnedLocation.depth || 3200}m • Hydrostatic Pressure: ~{pinnedLocation.pressure?.dbar || 3250} dbar
               </div>
             )}
+          </div>
 
+          {/* B. ZOOM & LAYER CONTROLS (Middle Right edge) */}
+          <div className="absolute right-4 top-1/2 -translate-y-1/2 flex flex-col gap-1.5 z-30">
             <button
-              onClick={handleTargetPinned}
-              className="w-full py-2 px-4 rounded-xl bg-gradient-to-r from-sky-600 to-cyan-500 hover:from-sky-500 hover:to-cyan-400 text-xs font-bold text-white shadow-glow-cyan flex items-center justify-center gap-2 cursor-pointer transition-all"
+              onClick={() => handleZoom(0.3)}
+              className="w-8 h-8 rounded-xl bg-[#061438]/90 hover:bg-[#0c2466] border border-sky-500/30 text-white flex items-center justify-center shadow-lg cursor-pointer transition-colors"
+              title="Zoom In"
             >
-              <span>Load 3D Ocean Digital Twin Here</span>
-              <ChevronRight className="w-4 h-4" />
+              <Plus className="w-4 h-4 text-cyan-300" />
+            </button>
+            <button
+              onClick={() => handleZoom(-0.3)}
+              className="w-8 h-8 rounded-xl bg-[#061438]/90 hover:bg-[#0c2466] border border-sky-500/30 text-white flex items-center justify-center shadow-lg cursor-pointer transition-colors"
+              title="Zoom Out"
+            >
+              <Minus className="w-4 h-4 text-cyan-300" />
+            </button>
+            <button
+              onClick={() => setIsLegendOpen(!isLegendOpen)}
+              className="w-8 h-8 rounded-xl bg-[#061438]/90 hover:bg-[#0c2466] border border-sky-500/30 text-white flex items-center justify-center shadow-lg cursor-pointer transition-colors"
+              title="Toggle Legend"
+            >
+              <Layers className="w-4 h-4 text-cyan-300" />
             </button>
           </div>
-        )}
+
+          {/* C. REAL-TIME INSPECTOR HUD (Bottom Left) matching reference image */}
+          <div className="absolute bottom-4 left-4 bg-[#05112e]/92 backdrop-blur-md p-3.5 rounded-2xl border border-sky-500/30 text-[11px] font-mono shadow-2xl z-30 max-w-sm pointer-events-none">
+            <div className="flex items-center gap-1.5 text-cyan-300 font-bold mb-1">
+              <Compass className="w-3.5 h-3.5 text-cyan-400" />
+              <span>Inspector: {inspectorData.lat}° {inspectorData.latDir || 'N'}, {inspectorData.lon}° {inspectorData.lonDir || 'E'}</span>
+            </div>
+            <div className="text-slate-300 leading-snug">
+              <div>Bathymetry: <b className="text-white">{inspectorData.depth}m</b></div>
+              <div>Pressure: <b className="text-amber-300">{inspectorData.pressure}</b></div>
+              <div>Sea Surface Temp: <b className="text-cyan-200">{inspectorData.sst} °C</b></div>
+              <div>Salinity: <b className="text-emerald-300">{inspectorData.salinity} PSU</b></div>
+              <div>Dissolved Oxygen: <b className="text-sky-300">{inspectorData.oxygen} mg/L</b></div>
+              <div>Chlorophyll-a: <b className="text-green-300">{inspectorData.chlorophyll} mg/m³</b></div>
+              <div>Wave Height: <b className="text-white">{inspectorData.waveHeight}m</b></div>
+              <div>Wind Speed: <b className="text-slate-200">{inspectorData.windSpeed} m/s</b></div>
+              <div>Wind Direction: <b className="text-slate-200">{inspectorData.windDir}</b></div>
+            </div>
+          </div>
+
+          {/* D. TARGET PINNED ACTION CARD */}
+          {pinnedLocation && (
+            <div className="absolute bottom-4 left-80 bg-[#07163d]/95 backdrop-blur-md p-3.5 rounded-2xl border border-cyan-400/50 shadow-glow-cyan z-30 max-w-xs">
+              <div className="flex items-center justify-between mb-1.5">
+                <div className="flex items-center gap-1.5 text-xs font-bold text-cyan-300">
+                  <MapPin className="w-3.5 h-3.5 text-cyan-400" />
+                  <span>{pinnedLocation.name || 'Selected Point'}</span>
+                </div>
+                <button 
+                  onClick={() => { setPinnedLocation(null); setSelectedBeach(null); }}
+                  className="text-slate-400 hover:text-white text-xs cursor-pointer"
+                >
+                  ✕
+                </button>
+              </div>
+
+              <div className="text-xs font-mono font-bold text-white mb-2">
+                {pinnedLocation.lat}° {pinnedLocation.lat >= 0 ? 'N' : 'S'}, {pinnedLocation.lon}° {pinnedLocation.lon >= 0 ? 'E' : 'W'}
+              </div>
+
+              {selectedBeach ? (
+                <div className="mb-2 text-[10px] text-slate-300 bg-[#040e28] p-2 rounded-xl">
+                  <div className="text-amber-300 font-bold flex items-center gap-1">
+                    <CloudRain className="w-3 h-3" />
+                    <span>Rain: {selectedBeach.rainProbability}% ({selectedBeach.total24hPrecipMm} mm)</span>
+                  </div>
+                  <div className="italic text-slate-400 mt-0.5">{selectedBeach.advisoryText}</div>
+                </div>
+              ) : (
+                <div className="mb-2 text-[10px] text-slate-300 font-mono">
+                  Bathymetry: ~{pinnedLocation.depth || 3200}m • Pressure: ~{pinnedLocation.pressure?.dbar || 3250} dbar
+                </div>
+              )}
+
+              <button
+                onClick={handleTargetPinned}
+                className="w-full py-1.5 px-3 rounded-xl bg-gradient-to-r from-sky-600 to-cyan-500 hover:from-sky-500 hover:to-cyan-400 text-xs font-bold text-white shadow-glow-cyan flex items-center justify-center gap-1.5 cursor-pointer transition-all"
+              >
+                <span>Load 3D Simulation Here</span>
+                <ChevronRight className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          )}
+
+          {/* E. MINI-MAP (Bottom Right inside map container) */}
+          <div className="absolute bottom-4 right-4 bg-[#05112e]/90 backdrop-blur-md p-2 rounded-2xl border border-sky-500/30 shadow-2xl z-30 flex flex-col items-center">
+            <span className="text-[9px] font-mono text-slate-400 mb-1">Mini Map</span>
+            <div className="relative w-28 h-14 rounded-lg overflow-hidden border border-sky-500/20 bg-[#030919]">
+              <img 
+                src="/world_map_satellite.jpg" 
+                alt="Mini Map" 
+                className="w-full h-full object-cover opacity-60 pointer-events-none"
+              />
+              {/* Dynamic Viewport Rectangle */}
+              <div 
+                className="absolute border border-cyan-400 border-dashed bg-cyan-400/10 pointer-events-none"
+                style={{
+                  left: `${miniMapBox.x}%`,
+                  top: `${miniMapBox.y}%`,
+                  width: `${miniMapBox.w}%`,
+                  height: `${miniMapBox.h}%`
+                }}
+              />
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
