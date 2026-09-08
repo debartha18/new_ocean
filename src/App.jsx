@@ -20,13 +20,15 @@ import AboutView from './components/ui/AboutView';
 import EnsoSimulationDock from './components/ui/EnsoSimulationDock';
 import EnsoSimulationView from './components/ui/EnsoSimulationView';
 import { REGIONS, createLocationData } from './data/oceanData';
+import { getFormattedCurrentDate, getCurrentUtcTimeHour } from './utils/dateUtils';
+import { getAccurateMeteorology } from './utils/weatherService';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('3D View');
   const [selectedParam, setSelectedParam] = useState('sst');
   const [depth, setDepth] = useState(50);
   const [viewMode, setViewMode] = useState('depth_slice');
-  const [timeHour, setTimeHour] = useState(12.0);
+  const [timeHour, setTimeHour] = useState(() => getCurrentUtcTimeHour());
   const [isPlaying, setIsPlaying] = useState(true);
   const [simSpeed, setSimSpeed] = useState(1);
   const [selectedBuoy, setSelectedBuoy] = useState(null);
@@ -38,10 +40,13 @@ export default function App() {
     isPlaying: true
   });
 
-  // Dynamic Location & Meteorological Threat State
-  const [activeRegion, setActiveRegion] = useState(REGIONS.bay_of_bengal);
-  const [selectedDate, setSelectedDate] = useState('15 Aug 2026');
-  const [isStormLayerActive, setIsStormLayerActive] = useState(true);
+  // Dynamic Location & Meteorological Threat State (Initializes to actual current date)
+  const [selectedDate, setSelectedDate] = useState(() => getFormattedCurrentDate());
+  const [activeRegion, setActiveRegion] = useState(() => ({
+    ...REGIONS.bay_of_bengal,
+    date: getFormattedCurrentDate()
+  }));
+  const [isStormLayerActive, setIsStormLayerActive] = useState(false);
 
   // Modals
   const [isAnomalyModalOpen, setIsAnomalyModalOpen] = useState(false);
@@ -63,6 +68,47 @@ export default function App() {
     }, 100);
     return () => clearInterval(interval);
   }, [isPlaying, simSpeed]);
+
+  // Asynchronous Live Satellite & Marine Observation Synchronizer
+  useEffect(() => {
+    if (!activeRegion?.lat || !activeRegion?.lon) return;
+
+    let isMounted = true;
+    const targetLat = activeRegion.lat;
+    const targetLon = activeRegion.lon;
+
+    getAccurateMeteorology(targetLat, targetLon, new Date(), activeRegion.sst).then((liveMet) => {
+      if (!isMounted || !liveMet) return;
+
+      setActiveRegion((prev) => {
+        if (!prev || Math.abs(prev.lat - targetLat) > 0.001 || Math.abs(prev.lon - targetLon) > 0.001) {
+          return prev;
+        }
+
+        return {
+          ...prev,
+          isLive: liveMet.isLive,
+          rainProbability: liveMet.rainProbability,
+          rainRate: liveMet.rainRate,
+          stormProbability: liveMet.stormProbability,
+          waveHeight: liveMet.waveHeight,
+          pressure: liveMet.pressure,
+          activeStorm: {
+            ...prev.activeStorm,
+            name: liveMet.isLive ? `${liveMet.weatherLabel} (${liveMet.stormCategory})` : prev.activeStorm?.name,
+            category: liveMet.stormCategory,
+            windSpeed: `${liveMet.windSpeedKmH} km/h`,
+            pressure: `${liveMet.pressure} hPa`,
+            rainfallForecast: `Precipitation chance: ${liveMet.rainProbability}% | Rain rate: ${liveMet.rainRate} mm/h (${liveMet.weatherLabel})`
+          }
+        };
+      });
+    });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [activeRegion?.lat, activeRegion?.lon]);
 
   const formatCurrentTime = (h) => {
     const hh = String(Math.floor(h)).padStart(2, '0');

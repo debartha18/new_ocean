@@ -1,11 +1,12 @@
 import React from 'react';
 import { Waves, Calendar, Moon, Bell, Compass, Globe2, FileText, Gauge } from 'lucide-react';
+import { getFormattedCurrentDate } from '../../utils/dateUtils';
 
 export default function Header({
   activeTab,
   setActiveTab,
   currentTime,
-  selectedDate = '15 Aug 2026',
+  selectedDate = getFormattedCurrentDate(),
   onOpenDatePicker,
   activeRegion,
   onOpenLocationModal,
@@ -130,7 +131,7 @@ export default function Header({
           <Bell className="w-3.5 h-3.5 text-red-400 animate-pulse" />
           <span className="font-bold hidden sm:inline text-[11px]">Storm Radar</span>
           <span className="px-1.5 py-0.5 rounded bg-red-500/30 text-[9px] font-mono font-bold text-white">
-            {activeRegion?.stormProbability ?? 75}%
+            {activeRegion?.stormProbability ?? 30}%
           </span>
         </button>
 

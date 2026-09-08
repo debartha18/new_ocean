@@ -17,6 +17,7 @@ import {
   Gauge
 } from 'lucide-react';
 import { PARAMETERS, DEPTH_LEVELS } from '../../data/oceanData';
+import { getFormattedCurrentDate } from '../../utils/dateUtils';
 
 export default function LeftControlPanel({
   selectedParam,
@@ -32,7 +33,7 @@ export default function LeftControlPanel({
   activeRegion,
   onOpenLocationModal,
   onCustomCoords,
-  selectedDate = '15 Aug 2026',
+  selectedDate = getFormattedCurrentDate(),
   onOpenDatePicker,
   onOpenStormNews,
   isStormLayerActive,
@@ -323,17 +324,29 @@ export default function LeftControlPanel({
           </button>
         </div>
 
-        <div className="grid grid-cols-2 gap-2 mb-2.5">
-          <div className="bg-[#120716] p-2 rounded-xl border border-red-500/20 text-center">
-            <div className="text-[9px] font-mono text-slate-400 uppercase">Storm Risk</div>
-            <div className="text-sm font-bold font-mono text-red-400">
-              {activeRegion?.stormProbability ?? 75}%
+        <div className="grid grid-cols-2 gap-1.5 mb-2.5 font-mono text-center">
+          <div className="bg-[#120716] p-1.5 rounded-xl border border-sky-500/20">
+            <div className="text-[8.5px] text-slate-400 uppercase">Rain Chance</div>
+            <div className="text-xs font-bold text-cyan-300">
+              {activeRegion?.rainProbability ?? 35}%
             </div>
           </div>
-          <div className="bg-[#120716] p-2 rounded-xl border border-red-500/20 text-center">
-            <div className="text-[9px] font-mono text-slate-400 uppercase">Rain Rate</div>
-            <div className="text-sm font-bold font-mono text-amber-300">
-              {activeRegion?.rainRate ?? 38.5} mm/h
+          <div className="bg-[#120716] p-1.5 rounded-xl border border-sky-500/20">
+            <div className="text-[8.5px] text-slate-400 uppercase">Rain Rate</div>
+            <div className="text-xs font-bold text-amber-300">
+              {activeRegion?.rainRate ?? 1.5} <span className="text-[7.5px]">mm/h</span>
+            </div>
+          </div>
+          <div className="bg-[#120716] p-1.5 rounded-xl border border-red-500/20">
+            <div className="text-[8.5px] text-slate-400 uppercase">Storm Risk</div>
+            <div className="text-xs font-bold text-red-400">
+              {activeRegion?.stormProbability ?? 30}%
+            </div>
+          </div>
+          <div className="bg-[#120716] p-1.5 rounded-xl border border-sky-500/20">
+            <div className="text-[8.5px] text-slate-400 uppercase">Wave Swell</div>
+            <div className="text-xs font-bold text-sky-200">
+              {activeRegion?.waveHeight ?? 1.65} <span className="text-[7.5px]">m</span>
             </div>
           </div>
         </div>

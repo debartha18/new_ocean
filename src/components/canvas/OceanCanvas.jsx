@@ -98,32 +98,54 @@ function createHurricaneVortexTexture() {
   return texture;
 }
 
-// Helper to create 3D Conical Tornado Funnel Mesh (Light Grey / White)
-function createTornadoFunnelMesh(radiusTop, radiusBottom, height, opacity = 0.68) {
-  const geo = new THREE.CylinderGeometry(radiusTop, radiusBottom, height, 32, 12, true);
+// Helper to create subtle, non-intrusive 3D Marine Waterspout Funnel
+function createTornadoFunnelMesh(radiusTop = 0.16, radiusBottom = 0.03, height = 0.44, opacity = 0.35) {
+  const group = new THREE.Group();
+
+  // 1. Twisted inner core - translucent mist
+  const geo = new THREE.CylinderGeometry(radiusTop, radiusBottom, height, 28, 10, true);
   const pos = geo.attributes.position;
   for (let i = 0; i < pos.count; i++) {
     const y = pos.getY(i);
     const progress = (y + height / 2) / height;
-    const angle = progress * Math.PI * 3.5;
+    const angle = progress * Math.PI * 2.8;
     const x = pos.getX(i);
     const z = pos.getZ(i);
     const nx = x * Math.cos(angle) - z * Math.sin(angle);
     const nz = x * Math.sin(angle) + z * Math.cos(angle);
-    pos.setX(i, nx + Math.sin(progress * Math.PI) * 0.05);
-    pos.setZ(i, nz + Math.cos(progress * Math.PI) * 0.03);
+    pos.setX(i, nx + Math.sin(progress * Math.PI) * 0.03);
+    pos.setZ(i, nz + Math.cos(progress * Math.PI) * 0.02);
   }
   geo.computeVertexNormals();
 
   const mat = new THREE.MeshStandardMaterial({
-    color: 0xe2e8f0, // Light grey / white misty cloud color
-    roughness: 0.55,
-    metalness: 0.08,
+    color: 0xf1f5f9,
+    emissive: 0x64748b,
+    emissiveIntensity: 0.12,
+    roughness: 0.6,
+    metalness: 0.02,
     transparent: true,
     opacity: opacity,
-    side: THREE.DoubleSide
+    side: THREE.DoubleSide,
+    depthWrite: false
   });
-  return new THREE.Mesh(geo, mat);
+  const innerMesh = new THREE.Mesh(geo, mat);
+  group.add(innerMesh);
+
+  // 2. Light misty outer sleeve
+  const outerGeo = new THREE.CylinderGeometry(radiusTop * 1.12, radiusBottom * 1.25, height, 24, 6, true);
+  const outerMat = new THREE.MeshBasicMaterial({
+    color: 0x94a3b8,
+    transparent: true,
+    opacity: opacity * 0.3,
+    side: THREE.DoubleSide,
+    depthWrite: false,
+    blending: THREE.AdditiveBlending
+  });
+  const outerMesh = new THREE.Mesh(outerGeo, outerMat);
+  group.add(outerMesh);
+
+  return group;
 }
 
 export default function OceanCanvas({
@@ -131,7 +153,7 @@ export default function OceanCanvas({
   depth = 50,
   viewMode = 'depth_slice',
   activeRegion,
-  isStormLayerActive = true,
+  isStormLayerActive = false,
   onSelectBuoy,
   _selectedBuoy = null,
   isPlaying = true,
@@ -150,11 +172,7 @@ export default function OceanCanvas({
   const stormGroupRef = useRef(null);
   const cycloneVortexRef = useRef(null);
   const tornadoMeshRef = useRef(null);
-  const satelliteTornado1Ref = useRef(null);
-  const satelliteTornado2Ref = useRef(null);
   const sprayRingMainRef = useRef(null);
-  const sprayRing1Ref = useRef(null);
-  const sprayRing2Ref = useRef(null);
   const rainMeshRef = useRef(null);
   const lightningLightRef = useRef(null);
   const raycasterRef = useRef(new THREE.Raycaster());
@@ -434,42 +452,20 @@ export default function OceanCanvas({
     stormGroup.add(cycloneMesh);
     cycloneVortexRef.current = cycloneMesh;
 
-    // 2. Main Central Waterspout / Tornado Funnel
-    const tornadoMesh = createTornadoFunnelMesh(0.24, 0.04, 0.48, 0.72);
-    tornadoMesh.position.set(0, 0.26, 0);
+    // 2. Single Subtle, Non-Disturbing Marine Waterspout Funnel
+    const tornadoMesh = createTornadoFunnelMesh(0.16, 0.035, 0.44, 0.35);
+    tornadoMesh.position.set(0, 0.25, 0);
     stormGroup.add(tornadoMesh);
     tornadoMeshRef.current = tornadoMesh;
 
-    // Main Waterspout Spray Ring on Water Surface
-    const sprayGeo = new THREE.RingGeometry(0.04, 0.18, 24);
+    // Main Waterspout Spray Ring on Water Surface (Gentle Mist)
+    const sprayGeo = new THREE.RingGeometry(0.04, 0.16, 24);
     sprayGeo.rotateX(-Math.PI * 0.5);
-    const sprayMat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.75, side: THREE.DoubleSide });
+    const sprayMat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.55, side: THREE.DoubleSide, depthWrite: false });
     const sprayRingMain = new THREE.Mesh(sprayGeo, sprayMat);
-    sprayRingMain.position.set(0, 0.035, 0);
+    sprayRingMain.position.set(0, 0.038, 0);
     stormGroup.add(sprayRingMain);
     sprayRingMainRef.current = sprayRingMain;
-
-    // 3. Small Satellite Tornado 1
-    const satTornado1 = createTornadoFunnelMesh(0.12, 0.025, 0.44, 0.65);
-    satTornado1.position.set(0.45, 0.24, 0.3);
-    stormGroup.add(satTornado1);
-    satelliteTornado1Ref.current = satTornado1;
-
-    const spray1 = new THREE.Mesh(new THREE.RingGeometry(0.02, 0.10, 20).rotateX(-Math.PI * 0.5), sprayMat);
-    spray1.position.set(0.45, 0.035, 0.3);
-    stormGroup.add(spray1);
-    sprayRing1Ref.current = spray1;
-
-    // 4. Small Satellite Tornado 2
-    const satTornado2 = createTornadoFunnelMesh(0.10, 0.02, 0.42, 0.6);
-    satTornado2.position.set(-0.4, 0.23, -0.35);
-    stormGroup.add(satTornado2);
-    satelliteTornado2Ref.current = satTornado2;
-
-    const spray2 = new THREE.Mesh(new THREE.RingGeometry(0.02, 0.09, 20).rotateX(-Math.PI * 0.5), sprayMat);
-    spray2.position.set(-0.4, 0.035, -0.35);
-    stormGroup.add(spray2);
-    sprayRing2Ref.current = spray2;
 
     // 5. Rain Squall Particles Falling from Cloud to Sea
     const rainCount = 450;
@@ -664,70 +660,53 @@ export default function OceanCanvas({
 
       // Animate 3D Storm, Hurricane & Tornado Funnels
       if (stormGroupRef.current) {
-        const stormProb = currentProps.activeRegion?.stormProbability ?? 75;
-        const hasStorm = currentProps.isStormLayerActive && stormProb >= 25;
+        const stormProb = currentProps.activeRegion?.stormProbability ?? 30;
+        // Visible whenever the Storm Layer is toggled ON (isStormLayerActive)
+        const hasStorm = Boolean(currentProps.isStormLayerActive);
         stormGroupRef.current.visible = hasStorm;
 
         if (hasStorm) {
-          const stormIntensity = stormProb / 100;
+          // Dynamic intensity scaling: minimum 0.35 so simulation is always clearly visible and animated when active
+          const stormIntensity = Math.max(0.35, Math.min(1.0, stormProb / 100));
 
-          // 1. Rotate Hurricane cloud arms (compact & misty)
+          // 1. Rotate Hurricane cloud arms (soft & misty)
           if (cycloneVortexRef.current) {
-            cycloneVortexRef.current.rotation.z = -elapsed * (1.2 + stormIntensity * 1.5) * speedMult;
-            cycloneVortexRef.current.scale.setScalar(0.75 + stormIntensity * 0.25);
+            cycloneVortexRef.current.rotation.z = -elapsed * (0.8 + stormIntensity * 1.0) * speedMult;
+            cycloneVortexRef.current.scale.setScalar(0.75 + stormIntensity * 0.2);
           }
 
-          // 2. Spin central Tornado / Waterspout funnel
+          // 2. Spin central subtle waterspout funnel
           if (tornadoMeshRef.current) {
-            tornadoMeshRef.current.rotation.y = elapsed * 3.8 * speedMult;
-            tornadoMeshRef.current.position.x = Math.sin(elapsed * 1.5) * 0.05;
-            tornadoMeshRef.current.position.z = Math.cos(elapsed * 1.2) * 0.05;
+            tornadoMeshRef.current.rotation.y = elapsed * 2.6 * speedMult;
+            tornadoMeshRef.current.position.x = Math.sin(elapsed * 0.8) * 0.025;
+            tornadoMeshRef.current.position.z = Math.cos(elapsed * 0.6) * 0.025;
           }
 
-          // 3. Orbit satellite tornadoes around the storm center
-          if (satelliteTornado1Ref.current && sprayRing1Ref.current) {
-            const orbitAngle1 = elapsed * 0.8 * speedMult;
-            const satX1 = Math.cos(orbitAngle1) * 0.55;
-            const satZ1 = Math.sin(orbitAngle1) * 0.45;
-            satelliteTornado1Ref.current.position.set(satX1, 0.24, satZ1);
-            satelliteTornado1Ref.current.rotation.y = elapsed * 5.0 * speedMult;
-            sprayRing1Ref.current.position.set(satX1, 0.035, satZ1);
-          }
-
-          if (satelliteTornado2Ref.current && sprayRing2Ref.current) {
-            const orbitAngle2 = elapsed * 0.6 * speedMult + Math.PI;
-            const satX2 = Math.cos(orbitAngle2) * 0.48;
-            const satZ2 = Math.sin(orbitAngle2) * 0.52;
-            satelliteTornado2Ref.current.position.set(satX2, 0.23, satZ2);
-            satelliteTornado2Ref.current.rotation.y = -elapsed * 4.6 * speedMult;
-            sprayRing2Ref.current.position.set(satX2, 0.035, satZ2);
-          }
-
-          // 4. Pulse water spray rings
+          // 3. Pulse gentle water spray ring
           if (sprayRingMainRef.current) {
-            const sprayPulse = (elapsed * 3.0) % 1.5;
-            sprayRingMainRef.current.scale.set(1 + sprayPulse * 0.6, 1 + sprayPulse * 0.6, 1);
-            sprayRingMainRef.current.material.opacity = Math.max(0, 0.8 - sprayPulse * 0.5);
+            const sprayPulse = (elapsed * 2.2) % 1.5;
+            sprayRingMainRef.current.scale.set(1 + sprayPulse * 0.4, 1 + sprayPulse * 0.4, 1);
+            sprayRingMainRef.current.material.opacity = Math.max(0, 0.6 - sprayPulse * 0.4);
           }
 
-          // 5. Falling rain squalls
+          // 4. Falling rain squalls
           if (rainMeshRef.current) {
             const { mesh, count } = rainMeshRef.current;
             const pos = mesh.geometry.attributes.position;
             for (let i = 0; i < count; i++) {
-              let py = pos.getY(i) - (0.018 + stormIntensity * 0.025) * (isPlayingCurrent ? simSpeedCurrent : 1);
+              let py = pos.getY(i) - (0.015 + stormIntensity * 0.02) * (isPlayingCurrent ? simSpeedCurrent : 1);
               if (py < 0.03) py = 0.52;
               pos.setY(i, py);
             }
             pos.needsUpdate = true;
           }
 
-          // 6. Realistic Lightning Flashes
+          // 5. Subtle ambient storm glow (gentle, non-disturbing)
           if (lightningLightRef.current) {
-            if (stormProb >= 50 && Math.random() < 0.028 * speedMult) {
-              lightningLightRef.current.intensity = 5.5 + Math.random() * 4.0;
+            if (stormProb >= 55 && Math.random() < 0.012 * speedMult) {
+              lightningLightRef.current.intensity = 2.2 + Math.random() * 1.8;
             } else {
-              lightningLightRef.current.intensity *= 0.78;
+              lightningLightRef.current.intensity *= 0.82;
             }
           }
         }

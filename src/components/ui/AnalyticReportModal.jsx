@@ -17,12 +17,13 @@ import {
 import { generatePressureDepthProfile, calculateGravity } from '../../utils/pressureCalculator';
 import { getNearestBeaches, calculateBeachRainForecast } from '../../data/beachData';
 import { VALIDATION_METRICS } from '../../data/oceanData';
+import { getFormattedCurrentDate } from '../../utils/dateUtils';
 
 export default function AnalyticReportModal({
   isOpen,
   onClose,
   activeRegion,
-  selectedDate = '15 Aug 2026',
+  selectedDate = getFormattedCurrentDate(),
   currentTime = '12:00 UTC'
 }) {
   const printRef = useRef(null);

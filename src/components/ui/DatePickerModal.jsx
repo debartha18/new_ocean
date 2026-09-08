@@ -1,10 +1,21 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { X, Calendar as CalendarIcon, Check, ChevronLeft, ChevronRight, Sparkles } from 'lucide-react';
+import { parseDateString, getFormattedCurrentDate } from '../../utils/dateUtils';
 
-export default function DatePickerModal({ isOpen, onClose, _currentDate = '15 Aug 2026', onSelectDate }) {
-  const [selectedYear, setSelectedYear] = useState(2026);
-  const [selectedMonth, setSelectedMonth] = useState(7); // August (0-indexed)
-  const [selectedDay, setSelectedDay] = useState(15);
+export default function DatePickerModal({ isOpen, onClose, currentDate, onSelectDate }) {
+  const initialParsed = parseDateString(currentDate);
+  const [selectedYear, setSelectedYear] = useState(initialParsed.year);
+  const [selectedMonth, setSelectedMonth] = useState(initialParsed.month);
+  const [selectedDay, setSelectedDay] = useState(initialParsed.day);
+
+  useEffect(() => {
+    if (isOpen && currentDate) {
+      const p = parseDateString(currentDate);
+      setSelectedYear(p.year);
+      setSelectedMonth(p.month);
+      setSelectedDay(p.day);
+    }
+  }, [isOpen, currentDate]);
 
   if (!isOpen) return null;
 
@@ -40,10 +51,16 @@ export default function DatePickerModal({ isOpen, onClose, _currentDate = '15 Au
     onClose();
   };
 
+  const today = new Date();
   const presets = [
+    { 
+      label: `Today (${getFormattedCurrentDate(today)}) - Live Satellite Sync`, 
+      day: today.getDate(), 
+      month: today.getMonth(), 
+      year: today.getFullYear() 
+    },
     { label: '15 Aug 2026 (Peak Monsoon & Cyclone Remal)', day: 15, month: 7, year: 2026 },
     { label: '24 May 2026 (Pre-Monsoon Cyclone Mocha)', day: 24, month: 4, year: 2026 },
-    { label: 'Today (Live Satellite Sync)', day: 3, month: 8, year: 2026 },
     { label: '15 Jan 2026 (Winter Ocean Baseline)', day: 15, month: 0, year: 2026 }
   ];
 

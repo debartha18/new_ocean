@@ -10,7 +10,9 @@ import {
   Gauge,
   Thermometer,
   Wind,
-  Globe
+  Globe,
+  CloudRain,
+  Radio
 } from 'lucide-react';
 import { 
   IN_SITU_SUMMARY, 
@@ -20,6 +22,7 @@ import {
   ENSO_METRICS
 } from '../../data/oceanData';
 import { calculateHydrostaticPressure } from '../../utils/pressureCalculator';
+import { getRainRateCategory } from '../../utils/weatherService';
 
 export default function RightAnalyticsPanel({ 
   onOpenAnomalyModal, 
@@ -52,48 +55,106 @@ export default function RightAnalyticsPanel({
   const pathModel = pointsModel.reduce((acc, p, i) => (i === 0 ? `M ${p.x} ${p.y}` : `${acc} L ${p.x} ${p.y}`), '');
   const pathObs = pointsObs.reduce((acc, p, i) => (i === 0 ? `M ${p.x} ${p.y}` : `${acc} L ${p.x} ${p.y}`), '');
 
-  const stormProb = activeRegion?.stormProbability ?? 75;
-  const rainRate = activeRegion?.rainRate ?? 38.5;
+  const stormProb = activeRegion?.stormProbability ?? 35;
+  const rainProb = activeRegion?.rainProbability ?? 40;
+  const rainRate = parseFloat(activeRegion?.rainRate ?? 2.5);
   const waveHeight = activeRegion?.waveHeight ?? 1.65;
+  const isLive = activeRegion?.isLive ?? false;
+  const rainCat = getRainRateCategory(rainRate);
 
   return (
     <aside className="w-80 h-full flex flex-col gap-3 p-3 select-none overflow-y-auto z-20">
       {/* 0. Position-Specific Storm & Rain Intelligence Card */}
       <div className="glass-panel rounded-2xl p-3.5 border border-red-500/40 bg-gradient-to-b from-[#1c081e]/80 to-[#07132e]/90 shadow-glow-red">
         <div className="flex items-center justify-between mb-2 px-1">
-          <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-red-400">
+          <div className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-red-400">
             <Zap className="w-3.5 h-3.5 text-red-400 animate-pulse" />
-            <span>Position Storm Risk</span>
+            <span>Storm & Rain Threat</span>
           </div>
-          <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-red-500/20 text-red-300 border border-red-500/30">
-            {activeRegion?.activeStorm?.category || 'Severe Squall'}
+          <div className="flex items-center gap-1">
+            {isLive && (
+              <span className="text-[9px] font-mono text-emerald-300 bg-emerald-500/20 border border-emerald-500/35 px-1.5 py-0.5 rounded flex items-center gap-1">
+                <Radio className="w-2.5 h-2.5 text-emerald-400 animate-pulse" />
+                Live Sync
+              </span>
+            )}
+            <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-red-500/20 text-red-300 border border-red-500/30 truncate max-w-[120px]">
+              {activeRegion?.activeStorm?.category || 'Maritime Disturbance'}
+            </span>
+          </div>
+        </div>
+
+        <div className="mb-2.5 px-1 flex items-center justify-between">
+          <div className="truncate mr-2">
+            <div className="text-xs font-bold text-white truncate">{activeRegion?.name || 'Ocean Basin'}</div>
+            <div className="text-[10px] font-mono text-cyan-300/80">{activeRegion?.coords || '15.297° N, 87.860° E'}</div>
+          </div>
+          <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded border ${rainCat.bg} ${rainCat.color} shrink-0`}>
+            {rainCat.text}
           </span>
         </div>
 
-        <div className="mb-2.5 px-1">
-          <div className="text-xs font-bold text-white truncate">{activeRegion?.name || 'Bay of Bengal'}</div>
-          <div className="text-[10px] font-mono text-cyan-300/80">{activeRegion?.coords || '15.297° N, 87.860° E'}</div>
+        {/* 4 Metric Gauges for this coordinate */}
+        <div className="grid grid-cols-2 gap-1.5 mb-2.5 text-center font-mono">
+          {/* 1. Rain Probability (%) */}
+          <div className="bg-[#120716] p-2 rounded-xl border border-sky-500/20">
+            <div className="text-[9px] text-slate-400 uppercase flex items-center justify-center gap-1">
+              <CloudRain className="w-3 h-3 text-cyan-400" />
+              <span>Rain Chance</span>
+            </div>
+            <div className={`text-sm font-bold mt-0.5 ${rainProb >= 60 ? 'text-cyan-300' : rainProb >= 30 ? 'text-sky-200' : 'text-slate-300'}`}>
+              {rainProb}%
+            </div>
+            <div className="text-[8px] text-slate-500 mt-0.5">
+              {rainProb >= 70 ? 'High Chance' : rainProb >= 35 ? 'Scattered' : 'Unlikely'}
+            </div>
+          </div>
+
+          {/* 2. Instantaneous Rain Rate (mm/h) */}
+          <div className="bg-[#120716] p-2 rounded-xl border border-sky-500/20">
+            <div className="text-[9px] text-slate-400 uppercase">Rain Rate</div>
+            <div className={`text-sm font-bold mt-0.5 ${rainRate > 15 ? 'text-red-400' : rainRate > 5 ? 'text-amber-300' : 'text-emerald-300'}`}>
+              {rainRate.toFixed(1)} <span className="text-[8px] text-slate-400">mm/h</span>
+            </div>
+            <div className={`text-[8px] mt-0.5 font-sans font-semibold ${rainCat.color}`}>
+              {rainCat.text}
+            </div>
+          </div>
+
+          {/* 3. Storm / Cyclone Genesis Risk (%) */}
+          <div className="bg-[#120716] p-2 rounded-xl border border-red-500/20">
+            <div className="text-[9px] text-slate-400 uppercase">Storm Risk</div>
+            <div className={`text-sm font-bold mt-0.5 ${stormProb >= 70 ? 'text-red-400' : stormProb >= 40 ? 'text-amber-400' : 'text-emerald-400'}`}>
+              {stormProb}%
+            </div>
+            <div className="text-[8px] text-slate-500 mt-0.5">
+              {stormProb >= 70 ? 'Severe Alert' : stormProb >= 40 ? 'Squall Watch' : 'Low Potential'}
+            </div>
+          </div>
+
+          {/* 4. Significant Wave Swell (m) */}
+          <div className="bg-[#120716] p-2 rounded-xl border border-sky-500/20">
+            <div className="text-[9px] text-slate-400 uppercase">Wave Swell</div>
+            <div className="text-sm font-bold text-cyan-300 mt-0.5">
+              {waveHeight} <span className="text-[8px] text-slate-400">m</span>
+            </div>
+            <div className="text-[8px] text-slate-500 mt-0.5">
+              {waveHeight >= 3.0 ? 'Rough Sea' : waveHeight >= 1.8 ? 'Moderate Sea' : 'Calm Swell'}
+            </div>
+          </div>
         </div>
 
-        {/* 3 Metric Gauges for this exact coordinate */}
-        <div className="grid grid-cols-3 gap-1.5 mb-3 text-center">
-          <div className="bg-[#120716] p-2 rounded-xl border border-red-500/20">
-            <div className="text-[9px] font-mono text-slate-400 uppercase">Storm Risk</div>
-            <div className="text-sm font-bold font-mono text-red-400 mt-0.5">{stormProb}%</div>
-          </div>
-          <div className="bg-[#120716] p-2 rounded-xl border border-red-500/20">
-            <div className="text-[9px] font-mono text-slate-400 uppercase">Rain Rate</div>
-            <div className="text-sm font-bold font-mono text-amber-300 mt-0.5">{rainRate} <span className="text-[8px]">mm/h</span></div>
-          </div>
-          <div className="bg-[#120716] p-2 rounded-xl border border-red-500/20">
-            <div className="text-[9px] font-mono text-slate-400 uppercase">Wave Swell</div>
-            <div className="text-sm font-bold font-mono text-cyan-300 mt-0.5">{waveHeight} <span className="text-[8px]">m</span></div>
+        {/* Dynamic Forecast Bulletin Bar */}
+        <div className="bg-[#0b0512] rounded-xl p-2 border border-white/10 mb-3 text-[10px] text-slate-300 leading-snug">
+          <div className="text-slate-400 font-mono text-[9px] uppercase tracking-wider mb-0.5">Weather Overview:</div>
+          <div className="truncate text-white font-medium">
+            {activeRegion?.activeStorm?.rainfallForecast || `Rain probability: ${rainProb}% | ${rainCat.text}`}
           </div>
         </div>
 
         <button
           onClick={onOpenStormNews}
-          className="w-full py-2 px-3 rounded-xl bg-red-500/25 hover:bg-red-500/35 text-xs font-bold text-red-200 border border-red-500/40 flex items-center justify-between transition-all shadow-glow-red"
+          className="w-full py-2 px-3 rounded-xl bg-red-500/25 hover:bg-red-500/35 text-xs font-bold text-red-200 border border-red-500/40 flex items-center justify-between transition-all shadow-glow-red cursor-pointer"
         >
           <span className="flex items-center gap-1.5">
             <Newspaper className="w-3.5 h-3.5 text-red-400" />

@@ -1,3 +1,6 @@
+import { getFormattedCurrentDate } from '../utils/dateUtils';
+import { calculateScientificWeather } from '../utils/weatherService';
+
 export const REGIONS = {
   bay_of_bengal: {
     id: 'bay_of_bengal',
@@ -12,16 +15,19 @@ export const REGIONS = {
     salinity: 33.42,
     currentSpeed: 0.85,
     waveHeight: 1.65,
-    stormProbability: 84,
-    rainRate: 38.5,
+    stormProbability: 35,
+    rainProbability: 42,
+    rainRate: 3.2,
+    pressure: 1008,
+    windSpeedKmH: 26,
     activeStorm: {
-      name: 'Severe Cyclonic Storm REMAL',
-      category: 'Cat 3 Tropical Cyclone',
-      windSpeed: '135 km/h (73 knots)',
-      pressure: '968 hPa',
-      surge: '2.8m above normal tide',
+      name: 'Monsoon Convective Squall Line',
+      category: 'Seasonal Tropical Depression',
+      windSpeed: '52 km/h (28 knots)',
+      pressure: '1004 hPa',
+      surge: '1.2m above normal tide',
       movement: 'North-Northeast at 14 km/h',
-      rainfallForecast: 'Heavy to very heavy rainfall (120-200mm/24h)'
+      rainfallForecast: 'Moderate to passing rain squalls (15-35mm/24h)'
     },
     buoys: [
       {
@@ -141,17 +147,20 @@ export const REGIONS = {
     sst: 28.90,
     salinity: 36.40,
     currentSpeed: 1.25,
-    waveHeight: 2.45,
-    stormProbability: 62,
-    rainRate: 22.0,
+    waveHeight: 1.85,
+    stormProbability: 25,
+    rainProbability: 20,
+    rainRate: 0.8,
+    pressure: 1012,
+    windSpeedKmH: 22,
     activeStorm: {
-      name: 'Cyclonic Storm TEJ',
-      category: 'Cat 2 Cyclonic Storm',
-      windSpeed: '105 km/h (57 knots)',
-      pressure: '984 hPa',
-      surge: '1.8m above normal tide',
+      name: 'Southwest Arabian Sea Swell',
+      category: 'Nominal Marine Flow',
+      windSpeed: '42 km/h (23 knots)',
+      pressure: '1010 hPa',
+      surge: '0.8m above normal tide',
       movement: 'West-Northwest at 18 km/h',
-      rainfallForecast: 'Moderate to heavy rain bands across Oman coast'
+      rainfallForecast: 'Passing light showers along shipping corridors'
     },
     buoys: [
       {
@@ -214,17 +223,20 @@ export const REGIONS = {
     sst: 30.40,
     salinity: 34.10,
     currentSpeed: 1.10,
-    waveHeight: 2.80,
-    stormProbability: 76,
-    rainRate: 42.0,
+    waveHeight: 2.10,
+    stormProbability: 40,
+    rainProbability: 52,
+    rainRate: 4.2,
+    pressure: 1006,
+    windSpeedKmH: 34,
     activeStorm: {
-      name: 'Super Typhoon YAGI',
-      category: 'Cat 4 Super Typhoon',
-      windSpeed: '210 km/h (113 knots)',
-      pressure: '935 hPa',
-      surge: '4.2m storm surge',
+      name: 'South China Sea Monsoon Trough',
+      category: 'Tropical Convective Depression',
+      windSpeed: '65 km/h (35 knots)',
+      pressure: '1002 hPa',
+      surge: '1.4m wave swell',
       movement: 'West-Northwest at 22 km/h',
-      rainfallForecast: 'Torrential rainfall (>250mm/24h) along Hainan/Vietnam'
+      rainfallForecast: 'Intermittent tropical showers (25-50mm/24h) along Hainan/Vietnam'
     },
     buoys: [
       {
@@ -238,7 +250,7 @@ export const REGIONS = {
         sst: 30.40,
         salinity: 34.10,
         currentSpeed: 1.10,
-        waveHeight: 2.80,
+        waveHeight: 2.10,
         battery: '95%',
         qcStatus: 'QC Passed',
         mooringDepth: 4200,
@@ -263,17 +275,20 @@ export const REGIONS = {
     sst: 31.10,
     salinity: 36.20,
     currentSpeed: 1.40,
-    waveHeight: 1.95,
-    stormProbability: 70,
-    rainRate: 28.0,
+    waveHeight: 1.45,
+    stormProbability: 28,
+    rainProbability: 32,
+    rainRate: 1.8,
+    pressure: 1012,
+    windSpeedKmH: 24,
     activeStorm: {
-      name: 'Hurricane BERYL',
-      category: 'Cat 3 Major Hurricane',
-      windSpeed: '185 km/h (100 knots)',
-      pressure: '952 hPa',
-      surge: '3.1m storm surge',
+      name: 'Loop Current Convective Cluster',
+      category: 'Nominal Tropical Marine',
+      windSpeed: '45 km/h (24 knots)',
+      pressure: '1010 hPa',
+      surge: '0.9m normal swell',
       movement: 'Northwest at 20 km/h',
-      rainfallForecast: 'Heavy squalls (150mm) across coastal Texas & Louisiana'
+      rainfallForecast: 'Isolated maritime showers (5-15mm/24h)'
     },
     buoys: [
       {
@@ -287,7 +302,7 @@ export const REGIONS = {
         sst: 31.10,
         salinity: 36.20,
         currentSpeed: 1.40,
-        waveHeight: 1.95,
+        waveHeight: 1.45,
         battery: '99%',
         qcStatus: 'QC Passed',
         mooringDepth: 3250,
@@ -312,17 +327,20 @@ export const REGIONS = {
     sst: 22.40,
     salinity: 35.80,
     currentSpeed: 1.65,
-    waveHeight: 3.40,
-    stormProbability: 45,
-    rainRate: 15.0,
+    waveHeight: 2.60,
+    stormProbability: 32,
+    rainProbability: 48,
+    rainRate: 2.9,
+    pressure: 1010,
+    windSpeedKmH: 38,
     activeStorm: {
-      name: 'Extratropical Cyclone HELENA',
-      category: 'Deep Oceanic Low',
-      windSpeed: '95 km/h (51 knots)',
-      pressure: '978 hPa',
-      surge: '2.2m wave swell',
+      name: 'North Atlantic Frontal System',
+      category: 'Extratropical Wave',
+      windSpeed: '65 km/h (35 knots)',
+      pressure: '1004 hPa',
+      surge: '1.8m wave swell',
       movement: 'East-Northeast at 35 km/h',
-      rainfallForecast: 'Widespread frontal rain & high gale seas'
+      rainfallForecast: 'Frontal sea spray and passing rain bands (15-30mm/24h)'
     },
     buoys: [
       {
@@ -336,7 +354,7 @@ export const REGIONS = {
         sst: 22.40,
         salinity: 35.80,
         currentSpeed: 1.65,
-        waveHeight: 3.40,
+        waveHeight: 2.60,
         battery: '97%',
         qcStatus: 'QC Passed',
         mooringDepth: 4800,
@@ -361,17 +379,20 @@ export const REGIONS = {
     sst: 30.60,
     salinity: 34.80,
     currentSpeed: 1.35,
-    waveHeight: 1.85,
-    stormProbability: 45,
-    rainRate: 24.0,
+    waveHeight: 1.60,
+    stormProbability: 24,
+    rainProbability: 35,
+    rainRate: 1.9,
+    pressure: 1011,
+    windSpeedKmH: 26,
     activeStorm: {
       name: 'Equatorial Kelvin Wave Surge',
       category: 'ENSO Thermal Wave Surge',
-      windSpeed: '65 km/h Westerly Wind Burst',
-      pressure: '1002 hPa',
-      surge: '1.4m Kelvin pulse',
+      windSpeed: '48 km/h Westerly Breeze',
+      pressure: '1008 hPa',
+      surge: '1.2m Kelvin pulse',
       movement: 'Eastward at 2.8 m/s (Wave Phase Speed)',
-      rainfallForecast: 'Intense atmospheric convective coupling shift towards Central/Eastern Pacific'
+      rainfallForecast: 'Scattered equatorial convective clusters (10-25mm/24h)'
     },
     buoys: [
       {
@@ -619,7 +640,7 @@ export const AI_ANOMALY = {
   title: 'Anomaly Detected',
   headline: 'Temperature is significantly higher than model prediction at 50m depth in this region.',
   confidence: '94.2%',
-  detectedAt: '15 Aug 2026 11:30 UTC',
+  detectedAt: `${getFormattedCurrentDate()} 11:30 UTC`,
   location: 'Central Bay of Bengal (15.297° N, 87.860° E)',
   depthRange: '45m – 110m',
   deviation: '+2.45 °C above ROMS/HYCOM baseline',
@@ -662,39 +683,19 @@ export const MARINE_NEWS_BULLETINS = [
   }
 ];
 
-export function createLocationData(lat, lon, customName = null, dateStr = '15 Aug 2026') {
+export function createLocationData(lat, lon, customName = null, dateStr = null) {
+  const effectiveDate = dateStr || getFormattedCurrentDate();
   const absLat = Math.abs(lat);
   // Realistic SST based on latitude and seasonal cycle
   const baseSst = Math.max(1.5, Math.min(31.5, 30.5 - Math.pow(absLat / 65, 1.7) * 26));
   const salinity = 33.0 + Math.sin(absLat * 0.1) * 3.5;
   const currentSpeed = 0.5 + Math.abs(Math.sin(lat * 0.2 + lon * 0.1)) * 1.2;
   
-  // Tropical and sub-tropical convergence zones have higher storm probability
-  let stormProb = Math.round(15 + Math.max(0, 75 - Math.abs(absLat - 16) * 4.2) + Math.sin(lon * 0.1) * 10);
-  stormProb = Math.max(5, Math.min(94, stormProb));
-  
-  const rainRate = (stormProb > 50 ? (20 + (stormProb - 50) * 0.6) : (stormProb * 0.35)).toFixed(1);
-  const waveHeight = (1.2 + (stormProb / 100) * 2.8).toFixed(2);
+  // Scientific meteorological model for accurate rain, storm, and wave prediction
+  const weather = calculateScientificWeather(lat, lon, new Date(), baseSst);
 
   const formattedCoords = `${absLat.toFixed(3)}° ${lat >= 0 ? 'N' : 'S'}, ${Math.abs(lon).toFixed(3)}° ${lon >= 0 ? 'E' : 'W'}`;
   const displayName = customName || `Station (${absLat.toFixed(2)}°${lat >= 0 ? 'N' : 'S'}, ${Math.abs(lon).toFixed(2)}°${lon >= 0 ? 'E' : 'W'})`;
-
-  let stormName = 'Maritime Convective System';
-  let stormCat = 'Low Pressure Disturbance';
-  let windSpeed = `${Math.round(45 + stormProb * 1.2)} km/h`;
-  let pressure = `${Math.round(1012 - stormProb * 0.6)} hPa`;
-  let surge = `${(0.6 + stormProb * 0.035).toFixed(1)}m`;
-
-  if (stormProb >= 75) {
-    stormName = 'Severe Cyclone Vortex';
-    stormCat = 'Cat 3-4 Tropical Cyclone';
-  } else if (stormProb >= 50) {
-    stormName = 'Tropical Storm / Squall Cell';
-    stormCat = 'Cat 1 Tropical Storm';
-  } else if (stormProb >= 30) {
-    stormName = 'Active Squall Line & Swell';
-    stormCat = 'Monsoon Depression';
-  }
 
   return {
     id: `coord_${lat.toFixed(2)}_${lon.toFixed(2)}`,
@@ -708,18 +709,22 @@ export function createLocationData(lat, lon, customName = null, dateStr = '15 Au
     sst: parseFloat(baseSst.toFixed(2)),
     salinity: parseFloat(salinity.toFixed(2)),
     currentSpeed: parseFloat(currentSpeed.toFixed(2)),
-    waveHeight: parseFloat(waveHeight),
-    stormProbability: stormProb,
-    rainRate: parseFloat(rainRate),
-    date: dateStr,
+    waveHeight: weather.waveHeight,
+    stormProbability: weather.stormProbability,
+    rainProbability: weather.rainProbability,
+    rainRate: weather.rainRate,
+    pressure: weather.pressure,
+    windSpeedKmH: weather.windSpeedKmH,
+    isLive: false,
+    date: effectiveDate,
     activeStorm: {
-      name: stormName,
-      category: stormCat,
-      windSpeed,
-      pressure,
-      surge,
+      name: weather.stormName,
+      category: weather.stormCategory,
+      windSpeed: `${weather.windSpeedKmH} km/h`,
+      pressure: `${weather.pressure} hPa`,
+      surge: `${(0.4 + (weather.stormProbability / 100) * 1.5).toFixed(1)}m above normal tide`,
       movement: 'Northwest at 16 km/h',
-      rainfallForecast: `Precipitation forecast: ${rainRate} mm/h with squalls and wave swells up to ${waveHeight}m`
+      rainfallForecast: `Precipitation probability: ${weather.rainProbability}% | Rate: ${weather.rainRate} mm/h (${weather.weatherLabel})`
     },
     buoys: [
       {
