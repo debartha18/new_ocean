@@ -125,6 +125,8 @@ export function calculateScientificWeather(lat, lon, dateObj = new Date(), input
 
   return {
     isLive: false,
+    sst: parseFloat(sst.toFixed(2)),
+    currentSpeed: parseFloat((0.4 + Math.sin(absLat * 0.1) * 0.45 + (stormProbability / 100) * 0.5).toFixed(2)),
     rainProbability,
     rainRate,
     stormProbability,
@@ -150,7 +152,7 @@ export async function fetchLiveMarineWeather(lat, lon) {
 
   try {
     const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,precipitation,rain,weather_code,cloud_cover,wind_speed_10m,surface_pressure&hourly=precipitation_probability,precipitation&forecast_days=1`;
-    const marineUrl = `https://marine-api.open-meteo.com/v1/marine?latitude=${lat}&longitude=${lon}&current=wave_height,wave_direction,wave_period`;
+    const marineUrl = `https://marine-api.open-meteo.com/v1/marine?latitude=${lat}&longitude=${lon}&current=wave_height,wave_direction,wave_period,ocean_current_velocity,ocean_current_direction`;
 
     // Fetch with a 3.5s timeout
     const controller = new AbortController();
@@ -179,18 +181,29 @@ export async function fetchLiveMarineWeather(lat, lon) {
     // Get current precipitation probability (%)
     let liveRainProb = 20;
     if (Array.isArray(hourly.precipitation_probability) && hourly.precipitation_probability.length > 0) {
-      // Find current hour probability or max of next 3 hours
       const nowIdx = new Date().getUTCHours();
       liveRainProb = hourly.precipitation_probability[nowIdx] ?? hourly.precipitation_probability[0] ?? 20;
     }
 
-    // Get marine wave data if available
-    let liveWaveHeight = 1.45;
+    // Get marine wave & ocean current data if available
+    let liveWaveHeight = 1.65;
+    let liveCurrentSpeed = 0.85;
     if (marineRes.status === 'fulfilled' && marineRes.value.ok) {
       const marineData = await marineRes.value.json();
       if (typeof marineData.current?.wave_height === 'number') {
         liveWaveHeight = parseFloat(marineData.current.wave_height.toFixed(2));
       }
+      if (typeof marineData.current?.ocean_current_velocity === 'number') {
+        // Open-Meteo returns km/h; convert to m/s
+        liveCurrentSpeed = parseFloat((marineData.current.ocean_current_velocity / 3.6).toFixed(2));
+      }
+    }
+
+    // Live Sea Surface Temperature estimation from marine surface boundary layer
+    let liveSst = 29.5;
+    if (typeof current.temperature_2m === 'number') {
+      const offset = (current.relative_humidity_2m ?? 80) > 82 ? 0.35 : 0.15;
+      liveSst = parseFloat((current.temperature_2m + offset).toFixed(2));
     }
 
     const windSpeed = current.wind_speed_10m ?? 24;
@@ -214,6 +227,8 @@ export async function fetchLiveMarineWeather(lat, lon) {
 
     const result = {
       isLive: true,
+      sst: liveSst,
+      currentSpeed: liveCurrentSpeed,
       rainProbability: liveRainProb,
       rainRate: liveRainRate,
       stormProbability: liveStormProb,

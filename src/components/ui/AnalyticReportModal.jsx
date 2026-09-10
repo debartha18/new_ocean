@@ -34,8 +34,11 @@ export default function AnalyticReportModal({
   const salinity = activeRegion?.salinity ?? 33.42;
   const currentSpeed = activeRegion?.currentSpeed ?? 0.85;
   const waveHeight = activeRegion?.waveHeight ?? 1.65;
-  const stormProb = activeRegion?.stormProbability ?? 75;
-  const rainRate = activeRegion?.rainRate ?? 38.5;
+  const stormProb = activeRegion?.stormProbability ?? 30;
+  const rainRate = activeRegion?.rainRate ?? 1.5;
+  const rainProb = activeRegion?.rainProbability ?? 35;
+  const chlorophyll = activeRegion?.chlorophyll ?? 1.25;
+  const oxygen = activeRegion?.oxygen ?? 6.85;
 
   const g = calculateGravity(lat);
   const depthProfile = generatePressureDepthProfile(lat, sst, salinity);

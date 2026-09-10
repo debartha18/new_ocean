@@ -88,11 +88,14 @@ export default function App() {
         return {
           ...prev,
           isLive: liveMet.isLive,
+          sst: liveMet.sst ?? prev.sst,
+          currentSpeed: liveMet.currentSpeed ?? prev.currentSpeed,
+          waveHeight: liveMet.waveHeight ?? prev.waveHeight,
+          pressure: liveMet.pressure ?? prev.pressure,
+          windSpeedKmH: liveMet.windSpeedKmH ?? prev.windSpeedKmH,
           rainProbability: liveMet.rainProbability,
           rainRate: liveMet.rainRate,
           stormProbability: liveMet.stormProbability,
-          waveHeight: liveMet.waveHeight,
-          pressure: liveMet.pressure,
           activeStorm: {
             ...prev.activeStorm,
             name: liveMet.isLive ? `${liveMet.weatherLabel} (${liveMet.stormCategory})` : prev.activeStorm?.name,
@@ -282,6 +285,8 @@ export default function App() {
         <BottomParameterStrip
           selectedParam={selectedParam}
           setSelectedParam={setSelectedParam}
+          activeRegion={activeRegion}
+          depth={depth}
           onNavigateToMap={() => setActiveTab('Map View')}
         />
       )}

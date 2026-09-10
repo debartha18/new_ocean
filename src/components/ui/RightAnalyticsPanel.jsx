@@ -17,6 +17,7 @@ import {
 import { 
   IN_SITU_SUMMARY, 
   VALIDATION_TIME_SERIES, 
+  getDynamicValidationTimeSeries,
   VALIDATION_METRICS, 
   AI_ANOMALY,
   ENSO_METRICS
@@ -37,17 +38,22 @@ export default function RightAnalyticsPanel({
 }) {
   const chartW = 240;
   const chartH = 85;
-  const minTemp = 27.0;
-  const maxTemp = 30.5;
+  const validationData = React.useMemo(() => {
+    return getDynamicValidationTimeSeries(new Date(), activeRegion?.sst ?? 29.5);
+  }, [activeRegion?.sst]);
 
-  const pointsModel = VALIDATION_TIME_SERIES.map((pt, i) => {
-    const x = (i / (VALIDATION_TIME_SERIES.length - 1)) * (chartW - 20) + 10;
+  const temps = validationData.flatMap(d => [d.model, d.observed]);
+  const minTemp = Math.min(...temps) - 0.8;
+  const maxTemp = Math.max(...temps) + 0.8;
+
+  const pointsModel = validationData.map((pt, i) => {
+    const x = (i / (validationData.length - 1)) * (chartW - 20) + 10;
     const y = chartH - ((pt.model - minTemp) / (maxTemp - minTemp)) * (chartH - 20) - 10;
     return { x, y, ...pt };
   });
 
-  const pointsObs = VALIDATION_TIME_SERIES.map((pt, i) => {
-    const x = (i / (VALIDATION_TIME_SERIES.length - 1)) * (chartW - 20) + 10;
+  const pointsObs = validationData.map((pt, i) => {
+    const x = (i / (validationData.length - 1)) * (chartW - 20) + 10;
     const y = chartH - ((pt.observed - minTemp) / (maxTemp - minTemp)) * (chartH - 20) - 10;
     return { x, y, ...pt };
   });
@@ -310,7 +316,7 @@ export default function RightAnalyticsPanel({
           </svg>
 
           <div className="flex justify-between text-[9px] font-mono text-slate-400 px-1 mt-1">
-            {VALIDATION_TIME_SERIES.map((pt) => (
+            {validationData.map((pt) => (
               <span key={pt.time}>{pt.time}</span>
             ))}
           </div>

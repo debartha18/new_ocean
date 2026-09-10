@@ -16,7 +16,7 @@ import {
   Newspaper,
   Gauge
 } from 'lucide-react';
-import { PARAMETERS, DEPTH_LEVELS } from '../../data/oceanData';
+import { PARAMETERS, DEPTH_LEVELS, calculateParameterAtDepth } from '../../data/oceanData';
 import { getFormattedCurrentDate } from '../../utils/dateUtils';
 
 export default function LeftControlPanel({
@@ -166,10 +166,13 @@ export default function LeftControlPanel({
                   </div>
                   <div>
                     <div className="text-xs font-semibold leading-tight">{param.name}</div>
+                    <div className="text-[10px] font-mono font-bold text-cyan-300">
+                      {calculateParameterAtDepth(param.id, depth, activeRegion)} {param.unit}
+                    </div>
                   </div>
                 </div>
-                <span className={`text-[11px] font-mono px-1.5 py-0.5 rounded ${isSelected ? 'text-cyan-200 bg-sky-900/50' : 'text-slate-400'}`}>
-                  {param.unit}
+                <span className={`text-[10px] font-mono px-1.5 py-0.5 rounded ${isSelected ? 'text-cyan-100 bg-cyan-500/30 border border-cyan-400/40' : 'text-slate-400 bg-[#06122d]'}`}>
+                  {depth}m
                 </span>
               </button>
             );

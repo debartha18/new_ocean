@@ -1,9 +1,11 @@
 import React from 'react';
-import { PARAMETERS } from '../../data/oceanData';
+import { PARAMETERS, calculateParameterAtDepth } from '../../data/oceanData';
 
 export default function BottomParameterStrip({ 
   selectedParam, 
   setSelectedParam, 
+  activeRegion,
+  depth = 50,
   onNavigateToMap 
 }) {
   const parameterConfigs = [
@@ -68,10 +70,13 @@ export default function BottomParameterStrip({
                   : 'bg-[#05112e]/70 hover:bg-[#08183d]/90 border border-sky-500/25 hover:border-sky-500/50'
               }`}
             >
-              {/* Header Title */}
-              <div className="relative z-10 flex items-center justify-between">
+              {/* Header Title & Live Value */}
+              <div className="relative z-10 flex items-center justify-between gap-1">
                 <span className={`text-[10px] font-bold truncate leading-tight ${isSelected ? 'text-cyan-300' : 'text-slate-200'}`}>
                   {param.title}
+                </span>
+                <span className="text-[10px] font-mono font-bold text-cyan-300 bg-sky-950/70 px-1 py-0.2 rounded border border-cyan-500/25 shrink-0">
+                  {calculateParameterAtDepth(param.id, depth, activeRegion)}
                 </span>
               </div>
 
