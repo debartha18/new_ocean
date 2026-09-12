@@ -19,6 +19,8 @@ import DataExplorerView from './components/ui/DataExplorerView';
 import AboutView from './components/ui/AboutView';
 import EnsoSimulationDock from './components/ui/EnsoSimulationDock';
 import EnsoSimulationView from './components/ui/EnsoSimulationView';
+import ColorbarSettingsModal from './components/ui/ColorbarSettingsModal';
+import NetcdfIngestionModal from './components/ui/NetcdfIngestionModal';
 import { REGIONS, createLocationData } from './data/oceanData';
 import { getFormattedCurrentDate, getCurrentUtcTimeHour } from './utils/dateUtils';
 import { getAccurateMeteorology } from './utils/weatherService';
@@ -32,6 +34,13 @@ export default function App() {
   const [isPlaying, setIsPlaying] = useState(true);
   const [simSpeed, setSimSpeed] = useState(1);
   const [selectedBuoy, setSelectedBuoy] = useState(null);
+
+  // Dynamic Colorbar, Palette, Layer Opacity & 3D Vertical Exaggeration State
+  const [palette, setPalette] = useState('turbo');
+  const [layerOpacity, setLayerOpacity] = useState(0.95);
+  const [verticalExaggeration, setVerticalExaggeration] = useState(1.0);
+  const [isLogScale, setIsLogScale] = useState(false);
+  const [customRanges, setCustomRanges] = useState({});
 
   // Dynamic ENSO (El Niño / La Niña / Normal) Simulation State
   const [ensoState, setEnsoState] = useState({
@@ -56,6 +65,8 @@ export default function App() {
   const [isStormNewsModalOpen, setIsStormNewsModalOpen] = useState(false);
   const [isAnalyticReportOpen, setIsAnalyticReportOpen] = useState(false);
   const [isDepthPressureOpen, setIsDepthPressureOpen] = useState(false);
+  const [isColorbarSettingsOpen, setIsColorbarSettingsOpen] = useState(false);
+  const [isNetcdfIngestionOpen, setIsNetcdfIngestionOpen] = useState(false);
 
   // Real-time animation timeline ticker
   useEffect(() => {
@@ -162,6 +173,7 @@ export default function App() {
         onOpenAlerts={() => setIsAnomalyModalOpen(true)}
         onOpenAnalyticReport={() => setIsAnalyticReportOpen(true)}
         onOpenDepthPressure={() => setIsDepthPressureOpen(true)}
+        onOpenNetcdfIngestion={() => setIsNetcdfIngestionOpen(true)}
       />
 
       {/* 2. Main Central Workstation or Tabbed Views */}
@@ -199,6 +211,7 @@ export default function App() {
             setActiveTab('3D View');
           }}
           onNavigateTab={(tab) => setActiveTab(tab)}
+          onOpenNetcdfIngestion={() => setIsNetcdfIngestionOpen(true)}
         />
       ) : activeTab === 'About' ? (
         <AboutView
@@ -247,6 +260,10 @@ export default function App() {
               isPlaying={isPlaying}
               simSpeed={simSpeed}
               ensoState={ensoState}
+              palette={palette}
+              layerOpacity={layerOpacity}
+              verticalExaggeration={verticalExaggeration}
+              isLogScale={isLogScale}
             />
 
             {/* Floating Viewport HUD Overlays */}
@@ -260,6 +277,10 @@ export default function App() {
               onOpenWorldMap={() => setActiveTab('Map View')}
               isStormLayerActive={isStormLayerActive}
               setIsStormLayerActive={setIsStormLayerActive}
+              onOpenColorbarSettings={() => setIsColorbarSettingsOpen(true)}
+              palette={palette}
+              isLogScale={isLogScale}
+              customRanges={customRanges}
               regionName={activeRegion?.name}
               regionCoords={activeRegion?.coords}
             />
@@ -346,6 +367,34 @@ export default function App() {
         currentLon={activeRegion?.lon || 87.860}
         initialDepth={depth}
         onApplyDepth={(newDepth) => setDepth(newDepth)}
+      />
+
+      <ColorbarSettingsModal
+        isOpen={isColorbarSettingsOpen}
+        onClose={() => setIsColorbarSettingsOpen(false)}
+        selectedParam={selectedParam}
+        setSelectedParam={setSelectedParam}
+        palette={palette}
+        setPalette={setPalette}
+        layerOpacity={layerOpacity}
+        setLayerOpacity={setLayerOpacity}
+        verticalExaggeration={verticalExaggeration}
+        setVerticalExaggeration={setVerticalExaggeration}
+        isLogScale={isLogScale}
+        setIsLogScale={setIsLogScale}
+        customRanges={customRanges}
+        setCustomRanges={setCustomRanges}
+      />
+
+      <NetcdfIngestionModal
+        isOpen={isNetcdfIngestionOpen}
+        onClose={() => setIsNetcdfIngestionOpen(false)}
+        onApplyIngestedDataset={(dataset) => {
+          setActiveRegion((prev) => ({
+            ...prev,
+            name: `${prev.name.split(' (')[0]} (${dataset.format})`
+          }));
+        }}
       />
     </div>
   );

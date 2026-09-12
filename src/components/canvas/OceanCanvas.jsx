@@ -23,34 +23,143 @@ function createDepthLabelSprite(text) {
 }
 
 // Helper to create floating circular buoy badge icon sprite
-function createBuoyBadgeSprite() {
+function createBuoyBadgeSprite(type = 'mooredBuoy') {
   const canvas = document.createElement('canvas');
   canvas.width = 64;
   canvas.height = 64;
   const ctx = canvas.getContext('2d');
 
-  ctx.fillStyle = '#0284c7';
+  let fillCol = '#0284c7';
+  let strokeCol = '#38bdf8';
+  let label = '';
+
+  if (type === 'gliderProfile') {
+    fillCol = '#0891b2';
+    strokeCol = '#22d3ee';
+    label = 'GL';
+  } else if (type === 'bgcArgo') {
+    fillCol = '#9333ea';
+    strokeCol = '#c084fc';
+    label = 'BGC';
+  } else if (type === 'adcpMooring') {
+    fillCol = '#ea580c';
+    strokeCol = '#fb923c';
+    label = 'ADCP';
+  }
+
+  ctx.fillStyle = fillCol;
   ctx.beginPath();
   ctx.arc(32, 32, 28, 0, Math.PI * 2);
   ctx.fill();
   ctx.lineWidth = 3;
-  ctx.strokeStyle = '#38bdf8';
+  ctx.strokeStyle = strokeCol;
   ctx.stroke();
 
-  ctx.strokeStyle = '#ffffff';
-  ctx.lineWidth = 3;
-  ctx.beginPath();
-  ctx.arc(32, 32, 12, -Math.PI * 0.7, Math.PI * 0.7);
-  ctx.stroke();
-  ctx.beginPath();
-  ctx.arc(32, 32, 6, -Math.PI * 0.7, Math.PI * 0.7);
-  ctx.stroke();
+  if (label) {
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 16px monospace';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(label, 32, 33);
+  } else {
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.arc(32, 32, 12, -Math.PI * 0.7, Math.PI * 0.7);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(32, 32, 6, -Math.PI * 0.7, Math.PI * 0.7);
+    ctx.stroke();
+  }
 
   const texture = new THREE.CanvasTexture(canvas);
   const mat = new THREE.SpriteMaterial({ map: texture, transparent: true });
   const sprite = new THREE.Sprite(mat);
   sprite.scale.set(0.22, 0.22, 1);
   return sprite;
+}
+
+// Builds specialized 3D geometries for each in-situ instrument type
+function buildInstrumentMesh(buoy) {
+  const buoyObj = new THREE.Group();
+  buoyObj.position.set(buoy.x * 1.6, 0.03, buoy.z * 1.3);
+  buoyObj.userData = buoy;
+
+  if (buoy.type === 'gliderProfile') {
+    // Slocum Underwater Glider: Streamlined torpedo fuselage + swept delta wings + tail rudder
+    const fuseGeo = new THREE.CylinderGeometry(0.024, 0.024, 0.22, 16);
+    fuseGeo.rotateX(Math.PI * 0.5);
+    const fuseMat = new THREE.MeshStandardMaterial({ color: 0x06b6d4, metalness: 0.5, roughness: 0.25 });
+    const fuse = new THREE.Mesh(fuseGeo, fuseMat);
+    fuse.position.y = 0.015;
+    buoyObj.add(fuse);
+
+    const wingGeo = new THREE.BoxGeometry(0.26, 0.005, 0.045);
+    const wingMat = new THREE.MeshStandardMaterial({ color: 0xfacc15, metalness: 0.3, roughness: 0.3 });
+    const wing = new THREE.Mesh(wingGeo, wingMat);
+    wing.position.set(0, 0.015, -0.01);
+    buoyObj.add(wing);
+
+    const finGeo = new THREE.BoxGeometry(0.006, 0.04, 0.03);
+    const fin = new THREE.Mesh(finGeo, wingMat);
+    fin.position.set(0, 0.035, -0.08);
+    buoyObj.add(fin);
+  } else if (buoy.type === 'bgcArgo') {
+    // BGC Argo Float: Slender profiler hull with bio-optical sensor cap
+    const bodyGeo = new THREE.CylinderGeometry(0.028, 0.03, 0.18, 16);
+    const bodyMat = new THREE.MeshStandardMaterial({ color: 0xa855f7, metalness: 0.4, roughness: 0.3 });
+    const body = new THREE.Mesh(bodyGeo, bodyMat);
+    body.position.y = 0.06;
+    buoyObj.add(body);
+
+    const headGeo = new THREE.SphereGeometry(0.028, 12, 12);
+    const headMat = new THREE.MeshStandardMaterial({ color: 0x00f0ff, metalness: 0.7, roughness: 0.2 });
+    const head = new THREE.Mesh(headGeo, headMat);
+    head.position.y = 0.15;
+    buoyObj.add(head);
+  } else if (buoy.type === 'adcpMooring') {
+    // ADCP Acoustic Profiler: Subsurface float sphere & 4-beam upward transducer
+    const sphereGeo = new THREE.SphereGeometry(0.048, 16, 16);
+    const sphereMat = new THREE.MeshStandardMaterial({ color: 0xf97316, metalness: 0.3, roughness: 0.4 });
+    const sphere = new THREE.Mesh(sphereGeo, sphereMat);
+    sphere.position.y = -0.02;
+    buoyObj.add(sphere);
+
+    const coneGeo = new THREE.ConeGeometry(0.032, 0.045, 4);
+    const coneMat = new THREE.MeshStandardMaterial({ color: 0x334155, metalness: 0.8, roughness: 0.2 });
+    const cone = new THREE.Mesh(coneGeo, coneMat);
+    cone.position.y = 0.035;
+    buoyObj.add(cone);
+  } else {
+    // Moored Buoy & Core Argo
+    const hullGeo = new THREE.CylinderGeometry(0.055, 0.06, 0.045, 16);
+    const hullMat = new THREE.MeshStandardMaterial({ color: 0xfacc15, metalness: 0.35, roughness: 0.3 });
+    const hull = new THREE.Mesh(hullGeo, hullMat);
+    hull.position.y = 0.022;
+    buoyObj.add(hull);
+
+    const mastGeo = new THREE.CylinderGeometry(0.006, 0.006, 0.14, 8);
+    const mastMat = new THREE.MeshStandardMaterial({ color: 0x94a3b8, metalness: 0.8 });
+    const mast = new THREE.Mesh(mastGeo, mastMat);
+    mast.position.y = 0.09;
+    buoyObj.add(mast);
+  }
+
+  // Floating telemetry badge
+  const badge = createBuoyBadgeSprite(buoy.type);
+  badge.position.set(0, 0.26, 0);
+  buoyObj.add(badge);
+
+  // Surface pulse ring
+  const ringGeo = new THREE.RingGeometry(0.07, 0.14, 16);
+  ringGeo.rotateX(-Math.PI * 0.5);
+  const ringColor = buoy.type === 'gliderProfile' ? 0x06b6d4 : (buoy.type === 'bgcArgo' ? 0xa855f7 : (buoy.type === 'adcpMooring' ? 0xf97316 : 0x00f0ff));
+  const ringMat = new THREE.MeshBasicMaterial({ color: ringColor, transparent: true, opacity: 0.65, side: THREE.DoubleSide });
+  const ring = new THREE.Mesh(ringGeo, ringMat);
+  ring.position.y = 0.01;
+  buoyObj.add(ring);
+
+  return buoyObj;
 }
 
 // Helper to create 3D Hurricane Cloud Texture (Soft misty spiral cloud bands)
@@ -158,7 +267,11 @@ export default function OceanCanvas({
   _selectedBuoy = null,
   isPlaying = true,
   simSpeed = 1,
-  ensoState = { phase: 'elnino', intensity: 0.75, isPlaying: true }
+  ensoState = { phase: 'elnino', intensity: 0.75, isPlaying: true },
+  palette = 'turbo',
+  layerOpacity = 0.95,
+  verticalExaggeration = 1.0,
+  isLogScale = false
 }) {
   const containerRef = useRef(null);
   const sceneRef = useRef(null);
@@ -166,6 +279,7 @@ export default function OceanCanvas({
   const rendererRef = useRef(null);
   const uniformsRef = useRef({});
   const depthWallUniformsRef = useRef({});
+  const depthCutawayGroupRef = useRef(null);
   const particlesRef = useRef(null);
   const buoysGroupRef = useRef(null);
   const earthMeshRef = useRef(null);
@@ -292,7 +406,10 @@ export default function OceanCanvas({
       uWaveSwell: { value: 1.0 },
       uSunDirection: { value: new THREE.Vector3(0.5, 1.0, 0.5).normalize() },
       uEnsoPhase: { value: 1 },
-      uEnsoIntensity: { value: 0.75 }
+      uEnsoIntensity: { value: 0.75 },
+      uPalette: { value: 1 },
+      uOpacity: { value: 0.95 },
+      uLogScale: { value: 0 }
     };
     uniformsRef.current = oceanUniforms;
 
@@ -307,13 +424,21 @@ export default function OceanCanvas({
     oceanMesh.position.set(0, 0.02, 0.15);
     scene.add(oceanMesh);
 
+    // Group for depth cutaway walls, depth ticks, seabed, and sensor probes for vertical exaggeration
+    const depthCutawayGroup = new THREE.Group();
+    scene.add(depthCutawayGroup);
+    depthCutawayGroupRef.current = depthCutawayGroup;
+
     // Volumetric Depth Cutaway Walls
     const depthWallUniforms = {
       uTime: { value: 0 },
       uParamType: { value: 0 },
       uMaxDepth: { value: 6000.0 },
       uEnsoPhase: { value: 1 },
-      uEnsoIntensity: { value: 0.75 }
+      uEnsoIntensity: { value: 0.75 },
+      uPalette: { value: 1 },
+      uOpacity: { value: 0.95 },
+      uLogScale: { value: 0 }
     };
     depthWallUniformsRef.current = depthWallUniforms;
 
@@ -329,13 +454,13 @@ export default function OceanCanvas({
 
     const wallFront = new THREE.Mesh(wallGeoFront, depthWallMat);
     wallFront.position.set(0, -depthSliceHeight * 0.5, 0.15 + oceanDepth * 0.5);
-    scene.add(wallFront);
+    depthCutawayGroup.add(wallFront);
 
     const wallGeoRight = new THREE.PlaneGeometry(oceanDepth, depthSliceHeight);
     wallGeoRight.rotateY(Math.PI * 0.5);
     const wallRight = new THREE.Mesh(wallGeoRight, depthWallMat);
     wallRight.position.set(oceanWidth * 0.5, -depthSliceHeight * 0.5, 0.15);
-    scene.add(wallRight);
+    depthCutawayGroup.add(wallRight);
 
     // 3D Depth Labels on Right Cutaway Wall Edge
     const depthTicks = [
@@ -352,7 +477,7 @@ export default function OceanCanvas({
       const sprite = createDepthLabelSprite(tick.text);
       const yPos = -(tick.yRatio * depthSliceHeight);
       sprite.position.set(oceanWidth * 0.5 + 0.28, yPos, 0.15 + oceanDepth * 0.5);
-      scene.add(sprite);
+      depthCutawayGroup.add(sprite);
 
       const tickLineGeo = new THREE.BufferGeometry().setFromPoints([
         new THREE.Vector3(oceanWidth * 0.5, yPos, 0.15 + oceanDepth * 0.5),
@@ -360,13 +485,13 @@ export default function OceanCanvas({
       ]);
       const tickLineMat = new THREE.LineBasicMaterial({ color: 0xffffff, linewidth: 2 });
       const tickLine = new THREE.Line(tickLineGeo, tickLineMat);
-      scene.add(tickLine);
+      depthCutawayGroup.add(tickLine);
     });
 
     // Central Deep CTD Sensor Probe Cable & Sensor Beads
     const probeGroup = new THREE.Group();
     probeGroup.position.set(0.05, 0, 0.25);
-    scene.add(probeGroup);
+    depthCutawayGroup.add(probeGroup);
 
     const cableGeo = new THREE.BufferGeometry().setFromPoints([
       new THREE.Vector3(0, 0, 0),
@@ -425,7 +550,7 @@ export default function OceanCanvas({
     });
     const seabedMesh = new THREE.Mesh(seabedGeo, seabedMat);
     seabedMesh.position.set(0, -depthSliceHeight, 0.15);
-    scene.add(seabedMesh);
+    depthCutawayGroup.add(seabedMesh);
 
     // ---------------------------------------------------------------------------
     // 3D STORM, HURRICANE & TORNADO/WATERSPOUT ENGINE
@@ -548,33 +673,7 @@ export default function OceanCanvas({
 
     const buoysList = activeRegion?.buoys || [];
     buoysList.forEach((buoy) => {
-      const buoyObj = new THREE.Group();
-      buoyObj.position.set(buoy.x * 1.6, 0.03, buoy.z * 1.3);
-      buoyObj.userData = buoy;
-
-      const hullGeo = new THREE.CylinderGeometry(0.055, 0.06, 0.045, 16);
-      const hullMat = new THREE.MeshStandardMaterial({ color: 0xfacc15, metalness: 0.35, roughness: 0.3 });
-      const hull = new THREE.Mesh(hullGeo, hullMat);
-      hull.position.y = 0.022;
-      buoyObj.add(hull);
-
-      const mastGeo = new THREE.CylinderGeometry(0.006, 0.006, 0.14, 8);
-      const mastMat = new THREE.MeshStandardMaterial({ color: 0x94a3b8, metalness: 0.8 });
-      const mast = new THREE.Mesh(mastGeo, mastMat);
-      mast.position.y = 0.09;
-      buoyObj.add(mast);
-
-      const badge = createBuoyBadgeSprite();
-      badge.position.set(0, 0.26, 0);
-      buoyObj.add(badge);
-
-      const ringGeo = new THREE.RingGeometry(0.07, 0.14, 16);
-      ringGeo.rotateX(-Math.PI * 0.5);
-      const ringMat = new THREE.MeshBasicMaterial({ color: 0x00f0ff, transparent: true, opacity: 0.65, side: THREE.DoubleSide });
-      const ring = new THREE.Mesh(ringGeo, ringMat);
-      ring.position.y = 0.01;
-      buoyObj.add(ring);
-
+      const buoyObj = buildInstrumentMesh(buoy);
       buoysGroup.add(buoyObj);
     });
 
@@ -816,33 +915,7 @@ export default function OceanCanvas({
 
     const buoysList = activeRegion?.buoys || [];
     buoysList.forEach((buoy) => {
-      const buoyObj = new THREE.Group();
-      buoyObj.position.set(buoy.x * 1.6, 0.03, buoy.z * 1.3);
-      buoyObj.userData = buoy;
-
-      const hullGeo = new THREE.CylinderGeometry(0.055, 0.06, 0.045, 16);
-      const hullMat = new THREE.MeshStandardMaterial({ color: 0xfacc15, metalness: 0.35, roughness: 0.3 });
-      const hull = new THREE.Mesh(hullGeo, hullMat);
-      hull.position.y = 0.022;
-      buoyObj.add(hull);
-
-      const mastGeo = new THREE.CylinderGeometry(0.006, 0.006, 0.14, 8);
-      const mastMat = new THREE.MeshStandardMaterial({ color: 0x94a3b8, metalness: 0.8 });
-      const mast = new THREE.Mesh(mastGeo, mastMat);
-      mast.position.y = 0.09;
-      buoyObj.add(mast);
-
-      const badge = createBuoyBadgeSprite();
-      badge.position.set(0, 0.26, 0);
-      buoyObj.add(badge);
-
-      const ringGeo = new THREE.RingGeometry(0.07, 0.14, 16);
-      ringGeo.rotateX(-Math.PI * 0.5);
-      const ringMat = new THREE.MeshBasicMaterial({ color: 0x00f0ff, transparent: true, opacity: 0.65, side: THREE.DoubleSide });
-      const ring = new THREE.Mesh(ringGeo, ringMat);
-      ring.position.y = 0.01;
-      buoyObj.add(ring);
-
+      const buoyObj = buildInstrumentMesh(buoy);
       group.add(buoyObj);
     });
   }, [activeRegion]);
@@ -872,6 +945,25 @@ export default function OceanCanvas({
     const modeIndices = { surface: 0, depth_slice: 1, volume: 2, isosurface: 3, vector_field: 4 };
     if (uniformsRef.current.uMode) uniformsRef.current.uMode.value = modeIndices[viewMode] ?? 1;
   }, [selectedParam, depth, viewMode]);
+
+  // Synchronize Color Palette, Layer Opacity, Vertical Exaggeration & Scale Mode
+  useEffect(() => {
+    const paletteMap = { default: 0, turbo: 1, viridis: 2, thermal: 3, coolwarm: 4, jet: 5 };
+    const palVal = paletteMap[palette] ?? 1;
+
+    if (uniformsRef.current.uPalette) uniformsRef.current.uPalette.value = palVal;
+    if (depthWallUniformsRef.current.uPalette) depthWallUniformsRef.current.uPalette.value = palVal;
+
+    if (uniformsRef.current.uOpacity) uniformsRef.current.uOpacity.value = layerOpacity;
+    if (depthWallUniformsRef.current.uOpacity) depthWallUniformsRef.current.uOpacity.value = layerOpacity;
+
+    if (uniformsRef.current.uLogScale) uniformsRef.current.uLogScale.value = isLogScale ? 1 : 0;
+    if (depthWallUniformsRef.current.uLogScale) depthWallUniformsRef.current.uLogScale.value = isLogScale ? 1 : 0;
+
+    if (depthCutawayGroupRef.current) {
+      depthCutawayGroupRef.current.scale.y = verticalExaggeration;
+    }
+  }, [palette, layerOpacity, verticalExaggeration, isLogScale]);
 
   return (
     <div className="relative w-full h-full overflow-hidden select-none">

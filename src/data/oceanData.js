@@ -48,15 +48,101 @@ export const REGIONS = {
         qcStatus: 'QC Passed',
         mooringDepth: 2850,
         lastTransmission: '10 mins ago',
+        sensors: 'Seabird SBE-37 MicroCAT CTD, Gill 2D Sonic Anemometer, Rotronic Hygroclip',
         depthProfile: [
-          { depth: 0, temp: 29.85, salinity: 33.42 },
-          { depth: 10, temp: 29.70, salinity: 33.55 },
-          { depth: 50, temp: 28.90, salinity: 34.20 },
-          { depth: 100, temp: 24.10, salinity: 34.85 },
-          { depth: 200, temp: 17.50, salinity: 35.10 },
-          { depth: 500, temp: 10.20, salinity: 35.05 },
-          { depth: 1000, temp: 6.80, salinity: 34.95 },
-          { depth: 2000, temp: 3.20, salinity: 34.80 }
+          { depth: 0, temp: 29.85, salinity: 33.42, oxygen: 6.85, chlorophyll: 1.25, velocity: 0.85, timestamp: '12:00 UTC' },
+          { depth: 10, temp: 29.70, salinity: 33.55, oxygen: 6.90, chlorophyll: 1.60, velocity: 0.82, timestamp: '12:00 UTC' },
+          { depth: 50, temp: 28.90, salinity: 34.20, oxygen: 6.45, chlorophyll: 2.35, velocity: 0.68, timestamp: '12:00 UTC' },
+          { depth: 100, temp: 24.10, salinity: 34.85, oxygen: 3.20, chlorophyll: 0.65, velocity: 0.44, timestamp: '12:00 UTC' },
+          { depth: 200, temp: 17.50, salinity: 35.10, oxygen: 1.45, chlorophyll: 0.08, velocity: 0.28, timestamp: '12:00 UTC' },
+          { depth: 500, temp: 10.20, salinity: 35.05, oxygen: 2.15, chlorophyll: 0.01, velocity: 0.14, timestamp: '12:00 UTC' },
+          { depth: 1000, temp: 6.80, salinity: 34.95, oxygen: 3.40, chlorophyll: 0.01, velocity: 0.08, timestamp: '12:00 UTC' },
+          { depth: 2000, temp: 3.20, salinity: 34.80, oxygen: 4.10, chlorophyll: 0.00, velocity: 0.04, timestamp: '12:00 UTC' }
+        ]
+      },
+      {
+        id: 'GLIDER-SG642',
+        type: 'gliderProfile',
+        name: 'INCOIS Slocum Glider SG-642 (Andaman Trench)',
+        lat: 13.450,
+        lon: 92.400,
+        x: 0.95,
+        z: 0.50,
+        sst: 29.70,
+        salinity: 33.75,
+        currentSpeed: 0.48,
+        waveHeight: 1.55,
+        battery: '82%',
+        qcStatus: 'Active Mission (Dive #318)',
+        mooringDepth: 1000,
+        lastTransmission: '14 mins ago (Iridium SBD)',
+        gliderTrajectory: 'Sawtooth V-Glide (18° Pitch Angle)',
+        sensors: 'Seabird Glider Payload CTD, Aanderaa Optode 4330 (DO), WetLabs ECO Triplet Fluorometer',
+        depthProfile: [
+          { depth: 0, temp: 29.70, salinity: 33.75, oxygen: 6.95, chlorophyll: 1.15, velocity: 0.48, timestamp: '10:14 UTC' },
+          { depth: 25, temp: 29.55, salinity: 33.82, oxygen: 7.10, chlorophyll: 1.85, velocity: 0.44, timestamp: '10:22 UTC' },
+          { depth: 50, temp: 28.80, salinity: 34.15, oxygen: 6.80, chlorophyll: 2.45, velocity: 0.38, timestamp: '10:31 UTC' },
+          { depth: 100, temp: 23.90, salinity: 34.80, oxygen: 3.40, chlorophyll: 0.85, velocity: 0.29, timestamp: '10:48 UTC' },
+          { depth: 150, temp: 19.80, salinity: 35.05, oxygen: 1.95, chlorophyll: 0.12, velocity: 0.22, timestamp: '11:05 UTC' },
+          { depth: 250, temp: 15.20, salinity: 35.12, oxygen: 1.45, chlorophyll: 0.02, velocity: 0.16, timestamp: '11:32 UTC' },
+          { depth: 500, temp: 10.10, salinity: 35.04, oxygen: 2.10, chlorophyll: 0.01, velocity: 0.11, timestamp: '12:15 UTC' },
+          { depth: 1000, temp: 6.70, salinity: 34.94, oxygen: 3.45, chlorophyll: 0.01, velocity: 0.06, timestamp: '13:05 UTC' }
+        ]
+      },
+      {
+        id: 'BGC-ARGO-2902188',
+        type: 'bgcArgo',
+        name: 'INCOIS BGC-Argo Profiler #2902188',
+        lat: 16.800,
+        lon: 88.500,
+        x: 0.25,
+        z: -0.35,
+        sst: 29.40,
+        salinity: 33.20,
+        currentSpeed: 0.70,
+        waveHeight: 1.60,
+        battery: '91%',
+        qcStatus: 'Profile Verified (Cycle 86)',
+        mooringDepth: 2000,
+        lastTransmission: '45 mins ago',
+        sensors: 'SBE-41CP CTD, SBE-63 Optical O2, WET Labs ECO-FLBB Chl-a / Backscatter',
+        depthProfile: [
+          { depth: 0, temp: 29.40, salinity: 33.20, oxygen: 6.85, chlorophyll: 1.35, velocity: 0.70, timestamp: '08:45 UTC' },
+          { depth: 20, temp: 29.35, salinity: 33.30, oxygen: 6.95, chlorophyll: 1.90, velocity: 0.65, timestamp: '08:55 UTC' },
+          { depth: 50, temp: 28.50, salinity: 34.10, oxygen: 6.60, chlorophyll: 2.80, velocity: 0.52, timestamp: '09:12 UTC' },
+          { depth: 100, temp: 24.20, salinity: 34.75, oxygen: 3.10, chlorophyll: 0.65, velocity: 0.38, timestamp: '09:35 UTC' },
+          { depth: 200, temp: 17.60, salinity: 35.10, oxygen: 1.55, chlorophyll: 0.05, velocity: 0.24, timestamp: '10:15 UTC' },
+          { depth: 500, temp: 10.30, salinity: 35.05, oxygen: 2.20, chlorophyll: 0.01, velocity: 0.12, timestamp: '11:10 UTC' },
+          { depth: 1000, temp: 6.80, salinity: 34.95, oxygen: 3.50, chlorophyll: 0.01, velocity: 0.07, timestamp: '12:30 UTC' },
+          { depth: 2000, temp: 3.25, salinity: 34.81, oxygen: 4.25, chlorophyll: 0.00, velocity: 0.04, timestamp: '14:20 UTC' }
+        ]
+      },
+      {
+        id: 'ADCP-MOOR-04',
+        type: 'adcpMooring',
+        name: 'Deep Current Profiler ADCP-04 (EICC Shear)',
+        lat: 14.800,
+        lon: 83.500,
+        x: -0.75,
+        z: 0.15,
+        sst: 29.90,
+        salinity: 33.80,
+        currentSpeed: 1.35,
+        waveHeight: 1.70,
+        battery: '96%',
+        qcStatus: 'Acoustic Beam Locked',
+        mooringDepth: 1200,
+        lastTransmission: '18 mins ago',
+        sensors: 'Teledyne RDI 75 kHz Workhorse Long Ranger ADCP (4-beam Janus array)',
+        depthProfile: [
+          { depth: 20, temp: 29.80, salinity: 33.85, oxygen: 6.75, chlorophyll: 1.20, velocity: 1.35, timestamp: '11:00 UTC' },
+          { depth: 50, temp: 28.70, salinity: 34.25, oxygen: 6.40, chlorophyll: 1.95, velocity: 1.22, timestamp: '11:00 UTC' },
+          { depth: 100, temp: 23.80, salinity: 34.90, oxygen: 3.80, chlorophyll: 0.45, velocity: 0.98, timestamp: '11:00 UTC' },
+          { depth: 200, temp: 17.20, salinity: 35.15, oxygen: 2.10, chlorophyll: 0.03, velocity: 0.65, timestamp: '11:00 UTC' },
+          { depth: 400, temp: 12.40, salinity: 35.10, oxygen: 1.80, chlorophyll: 0.01, velocity: 0.42, timestamp: '11:00 UTC' },
+          { depth: 600, temp: 9.20, salinity: 35.02, oxygen: 2.40, chlorophyll: 0.00, velocity: 0.28, timestamp: '11:00 UTC' },
+          { depth: 800, temp: 7.50, salinity: 34.98, oxygen: 3.10, chlorophyll: 0.00, velocity: 0.18, timestamp: '11:00 UTC' },
+          { depth: 1000, temp: 6.60, salinity: 34.94, oxygen: 3.65, chlorophyll: 0.00, velocity: 0.11, timestamp: '11:00 UTC' }
         ]
       },
       {
@@ -75,14 +161,15 @@ export const REGIONS = {
         qcStatus: 'QC Passed',
         mooringDepth: 2200,
         lastTransmission: '25 mins ago',
+        sensors: 'Aanderaa SEAGUARD CTD & Current Sensor',
         depthProfile: [
-          { depth: 0, temp: 28.40, salinity: 31.10 },
-          { depth: 10, temp: 28.30, salinity: 31.40 },
-          { depth: 50, temp: 27.50, salinity: 33.80 },
-          { depth: 100, temp: 23.20, salinity: 34.70 },
-          { depth: 200, temp: 16.80, salinity: 35.00 },
-          { depth: 500, temp: 9.80, salinity: 35.02 },
-          { depth: 1000, temp: 6.40, salinity: 34.92 }
+          { depth: 0, temp: 28.40, salinity: 31.10, oxygen: 6.70, chlorophyll: 1.45, velocity: 1.15, timestamp: '11:45 UTC' },
+          { depth: 10, temp: 28.30, salinity: 31.40, oxygen: 6.75, chlorophyll: 1.70, velocity: 1.10, timestamp: '11:45 UTC' },
+          { depth: 50, temp: 27.50, salinity: 33.80, oxygen: 6.30, chlorophyll: 2.10, velocity: 0.90, timestamp: '11:45 UTC' },
+          { depth: 100, temp: 23.20, salinity: 34.70, oxygen: 3.30, chlorophyll: 0.55, velocity: 0.62, timestamp: '11:45 UTC' },
+          { depth: 200, temp: 16.80, salinity: 35.00, oxygen: 1.40, chlorophyll: 0.05, velocity: 0.35, timestamp: '11:45 UTC' },
+          { depth: 500, temp: 9.80, salinity: 35.02, oxygen: 2.05, chlorophyll: 0.01, velocity: 0.16, timestamp: '11:45 UTC' },
+          { depth: 1000, temp: 6.40, salinity: 34.92, oxygen: 3.35, chlorophyll: 0.00, velocity: 0.09, timestamp: '11:45 UTC' }
         ]
       },
       {
@@ -101,11 +188,12 @@ export const REGIONS = {
         qcStatus: 'QC Passed',
         mooringDepth: 3400,
         lastTransmission: '5 mins ago',
+        sensors: 'Seabird SBE-37 MicroCAT CTD',
         depthProfile: [
-          { depth: 0, temp: 30.20, salinity: 34.15 },
-          { depth: 50, temp: 29.30, salinity: 34.60 },
-          { depth: 100, temp: 25.40, salinity: 35.00 },
-          { depth: 500, temp: 11.00, salinity: 35.08 }
+          { depth: 0, temp: 30.20, salinity: 34.15, oxygen: 6.90, chlorophyll: 0.95, velocity: 0.72, timestamp: '12:10 UTC' },
+          { depth: 50, temp: 29.30, salinity: 34.60, oxygen: 6.70, chlorophyll: 1.95, velocity: 0.58, timestamp: '12:10 UTC' },
+          { depth: 100, temp: 25.40, salinity: 35.00, oxygen: 3.80, chlorophyll: 0.40, velocity: 0.38, timestamp: '12:10 UTC' },
+          { depth: 500, temp: 11.00, salinity: 35.08, oxygen: 2.25, chlorophyll: 0.01, velocity: 0.12, timestamp: '12:10 UTC' }
         ]
       },
       {
@@ -124,15 +212,16 @@ export const REGIONS = {
         qcStatus: 'Profile Completed (Cycle 142)',
         mooringDepth: 2000,
         lastTransmission: '2 hours ago',
+        sensors: 'Seabird SBE-41CTD profiling package',
         depthProfile: [
-          { depth: 0, temp: 29.50, salinity: 33.90 },
-          { depth: 10, temp: 29.40, salinity: 33.95 },
-          { depth: 50, temp: 28.70, salinity: 34.30 },
-          { depth: 100, temp: 24.50, salinity: 34.90 },
-          { depth: 200, temp: 18.00, salinity: 35.15 },
-          { depth: 500, temp: 10.50, salinity: 35.05 },
-          { depth: 1000, temp: 6.90, salinity: 34.96 },
-          { depth: 2000, temp: 3.30, salinity: 34.82 }
+          { depth: 0, temp: 29.50, salinity: 33.90, oxygen: 6.80, chlorophyll: 1.10, velocity: 0.65, timestamp: '06:30 UTC' },
+          { depth: 10, temp: 29.40, salinity: 33.95, oxygen: 6.85, chlorophyll: 1.40, velocity: 0.62, timestamp: '06:35 UTC' },
+          { depth: 50, temp: 28.70, salinity: 34.30, oxygen: 6.50, chlorophyll: 2.20, velocity: 0.50, timestamp: '06:50 UTC' },
+          { depth: 100, temp: 24.50, salinity: 34.90, oxygen: 3.35, chlorophyll: 0.50, velocity: 0.35, timestamp: '07:15 UTC' },
+          { depth: 200, temp: 18.00, salinity: 35.15, oxygen: 1.60, chlorophyll: 0.06, velocity: 0.22, timestamp: '07:50 UTC' },
+          { depth: 500, temp: 10.50, salinity: 35.05, oxygen: 2.10, chlorophyll: 0.01, velocity: 0.12, timestamp: '08:45 UTC' },
+          { depth: 1000, temp: 6.90, salinity: 34.96, oxygen: 3.45, chlorophyll: 0.01, velocity: 0.07, timestamp: '09:50 UTC' },
+          { depth: 2000, temp: 3.30, salinity: 34.82, oxygen: 4.15, chlorophyll: 0.00, velocity: 0.04, timestamp: '11:20 UTC' }
         ]
       }
     ]
@@ -625,8 +714,11 @@ export const VIEW_MODES = [
 export const IN_SITU_SUMMARY = {
   driftingBuoy: { count: 12, label: 'Drifting Buoy', color: '#facc15', bg: 'bg-yellow-400' },
   mooredBuoy: { count: 8, label: 'Moored Buoy', color: '#4ade80', bg: 'bg-green-400' },
-  argoFloat: { count: 24, label: 'Argo Float', color: '#38bdf8', bg: 'bg-sky-400' },
-  tideGauge: { count: 5, label: 'Tide Gauge', color: '#c084fc', bg: 'bg-purple-400' }
+  argoFloat: { count: 24, label: 'Core Argo Float', color: '#38bdf8', bg: 'bg-sky-400' },
+  bgcArgo: { count: 14, label: 'BGC-Argo Profiler', color: '#a855f7', bg: 'bg-purple-400' },
+  gliderProfile: { count: 6, label: 'Underwater Glider', color: '#06b6d4', bg: 'bg-cyan-400' },
+  adcpMooring: { count: 9, label: 'ADCP Current Mooring', color: '#f97316', bg: 'bg-orange-400' },
+  tideGauge: { count: 5, label: 'Tide Gauge', color: '#ec4899', bg: 'bg-pink-400' }
 };
 
 export const BUOY_MARKERS = REGIONS.bay_of_bengal.buoys;

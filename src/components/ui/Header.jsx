@@ -1,5 +1,5 @@
 import React from 'react';
-import { Waves, Calendar, Moon, Bell, Compass, Globe2, FileText, Gauge } from 'lucide-react';
+import { Waves, Calendar, Moon, Bell, Compass, Globe2, FileText, Gauge, Database } from 'lucide-react';
 import { getFormattedCurrentDate } from '../../utils/dateUtils';
 
 export default function Header({
@@ -13,7 +13,8 @@ export default function Header({
   onOpenStormNews,
   onOpenAlerts,
   onOpenAnalyticReport,
-  onOpenDepthPressure
+  onOpenDepthPressure,
+  onOpenNetcdfIngestion
 }) {
   const tabs = ['Dashboard', '3D View', 'El Niño Simulation', 'Map View', 'Analytics', 'Alerts', 'Data Explorer', 'About'];
 
@@ -110,6 +111,16 @@ export default function Header({
         >
           <Gauge className="w-3.5 h-3.5 text-cyan-400" />
           <span className="font-bold text-[11px]">Pressure Calc</span>
+        </button>
+
+        {/* NetCDF CF-1.8 Data Ingestion Trigger */}
+        <button
+          onClick={onOpenNetcdfIngestion}
+          title="Ingest NetCDF CF-1.8 / Delimited Oceanographic Datasets"
+          className="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#0b1b42]/80 hover:bg-[#12285a] border border-cyan-500/30 hover:border-cyan-400 text-xs text-cyan-200 transition-all cursor-pointer"
+        >
+          <Database className="w-3.5 h-3.5 text-cyan-400" />
+          <span className="font-bold text-[11px]">Ingest NetCDF</span>
         </button>
 
         {/* Analytic Report Quick Trigger */}

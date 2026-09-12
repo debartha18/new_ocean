@@ -36,10 +36,12 @@ export default function FleetModal({ isOpen, onClose, onSelectBuoy }) {
         {/* Filter Pills */}
         <div className="flex items-center gap-2 mb-4 pb-2 border-b border-sky-500/15 overflow-x-auto">
           {[
-            { id: 'all', label: 'All Assets (49)' },
-            { id: 'mooredBuoy', label: 'Moored Buoys (8)' },
-            { id: 'driftingBuoy', label: 'Drifting Buoys (12)' },
-            { id: 'argoFloat', label: 'Argo Floats (24)' }
+            { id: 'all', label: 'All Fleet Assets' },
+            { id: 'mooredBuoy', label: 'Moored Buoys' },
+            { id: 'argoFloat', label: 'Core Argo' },
+            { id: 'bgcArgo', label: 'BGC-Argo' },
+            { id: 'gliderProfile', label: 'Underwater Gliders' },
+            { id: 'adcpMooring', label: 'ADCP Moorings' }
           ].map((f) => (
             <button
               key={f.id}

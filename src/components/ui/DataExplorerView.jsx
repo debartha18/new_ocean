@@ -18,7 +18,7 @@ import { REGIONS } from '../../data/oceanData';
 import { COASTAL_BEACHES, calculateBeachRainForecast } from '../../data/beachData';
 import { calculateHydrostaticPressure } from '../../utils/pressureCalculator';
 
-export default function DataExplorerView({ onSelectRegion, onNavigateTab }) {
+export default function DataExplorerView({ onSelectRegion, onNavigateTab, onOpenNetcdfIngestion }) {
   const [selectedBasin, setSelectedBasin] = useState('all');
   const [selectedParam, setSelectedParam] = useState('all');
   const [selectedPlatform, setSelectedPlatform] = useState('all');
@@ -332,8 +332,17 @@ export default function DataExplorerView({ onSelectRegion, onNavigateTab }) {
           </p>
         </div>
 
-        {/* Export Buttons */}
-        <div className="flex items-center gap-2.5">
+        {/* Export & Ingestion Buttons */}
+        <div className="flex items-center gap-2.5 flex-wrap">
+          {onOpenNetcdfIngestion && (
+            <button
+              onClick={onOpenNetcdfIngestion}
+              className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-cyan-500/20 hover:bg-cyan-500/30 text-xs font-semibold text-cyan-200 border border-cyan-400/40 transition-all cursor-pointer shadow-glow-cyan"
+            >
+              <Database className="w-4 h-4 text-cyan-300" />
+              <span>Ingest NetCDF / Delimited</span>
+            </button>
+          )}
           <button
             onClick={handleExportCSV}
             className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-sky-500/10 hover:bg-sky-500/20 text-xs font-semibold text-cyan-300 border border-sky-500/30 transition-all cursor-pointer"

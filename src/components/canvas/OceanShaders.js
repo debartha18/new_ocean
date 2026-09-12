@@ -11,6 +11,9 @@ export const OceanSurfaceShader = {
     uSunDirection: { value: new THREE.Vector3(0.5, 1.0, 0.5).normalize() },
     uEnsoPhase: { value: 1 }, // 0: Normal, 1: El Niño, 2: La Niña
     uEnsoIntensity: { value: 0.75 }, // 0.0 to 1.0
+    uPalette: { value: 0 }, // 0: Default, 1: Turbo, 2: Viridis, 3: Thermal, 4: Coolwarm, 5: Jet
+    uOpacity: { value: 0.95 },
+    uLogScale: { value: 0 }
   },
   vertexShader: `
     varying vec2 vUv;
@@ -64,12 +67,74 @@ export const OceanSurfaceShader = {
     uniform float uWaveSwell;
     uniform int uEnsoPhase;
     uniform float uEnsoIntensity;
+    uniform int uPalette;
+    uniform float uOpacity;
+    uniform int uLogScale;
     
     varying vec2 vUv;
     varying vec3 vWorldPosition;
     varying vec3 vNormal;
     varying float vWaveHeight;
     varying float vFoam;
+
+    vec3 colormapTurbo(float x) {
+      x = clamp(x, 0.0, 1.0);
+      const vec4 kRedVec4 = vec4(0.13572138, 4.61539260, -42.66032258, 132.13108234);
+      const vec4 kGreenVec4 = vec4(0.09140261, 2.19418839, 4.84296658, -14.18503333);
+      const vec4 kBlueVec4 = vec4(0.10667330, 12.64194608, -60.58204836, 110.36276771);
+      const vec2 kRedVec2 = vec2(-152.94239396, 59.28637943);
+      const vec2 kGreenVec2 = vec2(4.27729857, 2.82956604);
+      const vec2 kBlueVec2 = vec2(-89.90310912, 27.34824973);
+      vec4 v4 = vec4(1.0, x, x * x, x * x * x);
+      vec2 v2 = v4.zw * v4.z;
+      return clamp(vec3(
+        dot(v4, kRedVec4) + dot(v2, kRedVec2),
+        dot(v4, kGreenVec4) + dot(v2, kGreenVec2),
+        dot(v4, kBlueVec4) + dot(v2, kBlueVec2)
+      ), 0.0, 1.0);
+    }
+
+    vec3 colormapViridis(float t) {
+      vec3 c0 = vec3(0.267, 0.004, 0.329);
+      vec3 c1 = vec3(0.190, 0.407, 0.556);
+      vec3 c2 = vec3(0.208, 0.718, 0.472);
+      vec3 c3 = vec3(0.993, 0.906, 0.143);
+      if (t < 0.33) return mix(c0, c1, t / 0.33);
+      if (t < 0.66) return mix(c1, c2, (t - 0.33) / 0.33);
+      return mix(c2, c3, (t - 0.66) / 0.34);
+    }
+
+    vec3 colormapThermal(float t) {
+      vec3 c0 = vec3(0.01, 0.02, 0.15);
+      vec3 c1 = vec3(0.35, 0.04, 0.45);
+      vec3 c2 = vec3(0.85, 0.22, 0.25);
+      vec3 c3 = vec3(0.98, 0.75, 0.25);
+      vec3 c4 = vec3(1.0, 1.0, 0.95);
+      if (t < 0.25) return mix(c0, c1, t / 0.25);
+      if (t < 0.50) return mix(c1, c2, (t - 0.25) / 0.25);
+      if (t < 0.75) return mix(c2, c3, (t - 0.50) / 0.25);
+      return mix(c3, c4, (t - 0.75) / 0.25);
+    }
+
+    vec3 colormapCoolwarm(float t) {
+      vec3 c0 = vec3(0.23, 0.30, 0.75);
+      vec3 c1 = vec3(0.86, 0.86, 0.90);
+      vec3 c2 = vec3(0.70, 0.01, 0.15);
+      if (t < 0.5) return mix(c0, c1, t / 0.5);
+      return mix(c1, c2, (t - 0.5) / 0.5);
+    }
+
+    vec3 colormapJet(float t) {
+      vec3 c0 = vec3(0.0, 0.0, 0.5);
+      vec3 c1 = vec3(0.0, 0.5, 1.0);
+      vec3 c2 = vec3(0.0, 1.0, 0.5);
+      vec3 c3 = vec3(1.0, 1.0, 0.0);
+      vec3 c4 = vec3(1.0, 0.0, 0.0);
+      if (t < 0.25) return mix(c0, c1, t / 0.25);
+      if (t < 0.50) return mix(c1, c2, (t - 0.25) / 0.25);
+      if (t < 0.75) return mix(c2, c3, (t - 0.50) / 0.25);
+      return mix(c3, c4, (t - 0.75) / 0.25);
+    }
 
     // High saturation rainbow colormap matching target reference image
     vec3 colormapSST(float t) {
@@ -180,13 +245,25 @@ export const OceanSurfaceShader = {
 
       val = clamp(val, 0.0, 1.0);
 
+      float mappedVal = val;
+      if (uLogScale == 1) {
+        mappedVal = log(1.0 + 9.0 * val) / 2.302585;
+      }
+
       vec3 color;
-      if (uParamType == 0) color = colormapSST(val);
-      else if (uParamType == 1) color = colormapSalinity(val);
-      else if (uParamType == 2) color = colormapCurrents(val);
-      else if (uParamType == 3) color = colormapWave(val);
-      else if (uParamType == 4) color = colormapChlorophyll(val);
-      else color = colormapOxygen(val);
+      if (uPalette == 1) color = colormapTurbo(mappedVal);
+      else if (uPalette == 2) color = colormapViridis(mappedVal);
+      else if (uPalette == 3) color = colormapThermal(mappedVal);
+      else if (uPalette == 4) color = colormapCoolwarm(mappedVal);
+      else if (uPalette == 5) color = colormapJet(mappedVal);
+      else {
+        if (uParamType == 0) color = colormapSST(mappedVal);
+        else if (uParamType == 1) color = colormapSalinity(mappedVal);
+        else if (uParamType == 2) color = colormapCurrents(mappedVal);
+        else if (uParamType == 3) color = colormapWave(mappedVal);
+        else if (uParamType == 4) color = colormapChlorophyll(mappedVal);
+        else color = colormapOxygen(mappedVal);
+      }
 
       // Fine current streamline lines directly drawn onto ocean surface
       float streamAngle = atan(p.y + 0.05, p.x - 0.28);
@@ -220,7 +297,7 @@ export const OceanSurfaceShader = {
 
       // Smooth edge blending with surrounding terrain
       float edgeDist = min(min(vUv.x, 1.0 - vUv.x), min(vUv.y, 1.0 - vUv.y));
-      float alpha = smoothstep(0.0, 0.06, edgeDist) * 0.96 + 0.04;
+      float alpha = (smoothstep(0.0, 0.06, edgeDist) * 0.96 + 0.04) * uOpacity;
 
       gl_FragColor = vec4(finalColor, alpha);
     }
@@ -234,7 +311,10 @@ export const DepthWallShader = {
     uParamType: { value: 0 },
     uMaxDepth: { value: 6000.0 },
     uEnsoPhase: { value: 1 },
-    uEnsoIntensity: { value: 0.75 }
+    uEnsoIntensity: { value: 0.75 },
+    uPalette: { value: 0 },
+    uOpacity: { value: 0.95 },
+    uLogScale: { value: 0 }
   },
   vertexShader: `
     varying vec2 vUv;
@@ -256,6 +336,9 @@ export const DepthWallShader = {
     uniform float uTime;
     uniform int uEnsoPhase;
     uniform float uEnsoIntensity;
+    uniform int uPalette;
+    uniform float uOpacity;
+    uniform int uLogScale;
 
     void main() {
       // Wavy stratification layer deformation matching reference image
@@ -319,7 +402,7 @@ export const DepthWallShader = {
 
       vec3 finalCol = depthColor + vec3(gridLines * 0.65) + vec3(verticalGrid);
 
-      gl_FragColor = vec4(finalCol, 0.94);
+      gl_FragColor = vec4(finalCol, 0.94 * uOpacity);
     }
   `
 };
