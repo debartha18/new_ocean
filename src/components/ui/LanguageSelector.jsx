@@ -77,17 +77,17 @@ export default function LanguageSelector() {
         aria-label={t('common.selectLanguage', 'Select language')}
         className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all duration-200 cursor-pointer border ${
           isOpen
-            ? 'bg-sky-500/20 text-cyan-300 border-cyan-400 shadow-glow-cyan'
-            : 'bg-[#0a1638]/70 text-slate-200 hover:text-white border-sky-500/20 hover:border-sky-400 hover:bg-sky-500/15'
+            ? 'bg-cyan-500/30 text-cyan-200 border-cyan-300 shadow-[0_0_15px_rgba(6,182,212,0.5)]'
+            : 'bg-[#0d2258]/90 text-cyan-200 hover:text-white border-cyan-400/50 hover:border-cyan-300 hover:bg-[#132f75] shadow-[0_0_10px_rgba(6,182,212,0.15)]'
         }`}
         title={`${t('common.selectLanguage', 'Select language')}: ${currentLang.nativeName} (${currentLang.name})`}
       >
-        <Globe className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
-        <span className="truncate max-w-[90px] sm:max-w-[120px] font-medium">
+        <span className="text-sm leading-none">🌐</span>
+        <span className="truncate max-w-[85px] sm:max-w-[110px] font-bold text-white tracking-wide">
           {currentLang.nativeName}
         </span>
         <ChevronDown
-          className={`w-3 h-3 text-sky-300 transition-transform duration-200 shrink-0 ${
+          className={`w-3 h-3 text-cyan-300 transition-transform duration-200 shrink-0 ${
             isOpen ? 'rotate-180' : ''
           }`}
         />
@@ -98,7 +98,7 @@ export default function LanguageSelector() {
         <div
           role="listbox"
           aria-label={t('common.selectLanguage', 'Select language')}
-          className="absolute right-0 mt-2 w-64 sm:w-72 rounded-2xl bg-[#06112c]/95 border border-sky-500/30 shadow-2xl backdrop-blur-xl z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-150"
+          className="absolute left-0 sm:right-0 sm:left-auto mt-2 w-64 sm:w-72 rounded-2xl bg-[#06112c]/98 border border-cyan-500/40 shadow-2xl backdrop-blur-xl z-[100] overflow-hidden animate-in fade-in zoom-in-95 duration-150"
         >
           {/* Header & Search Bar */}
           <div className="p-2.5 border-b border-sky-500/20 bg-[#08173d]/80">

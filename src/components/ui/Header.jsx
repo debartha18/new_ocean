@@ -93,19 +93,22 @@ export default function Header({
       </nav>
 
       {/* Live Date, Location & Controls */}
-      <div className="flex items-center gap-2.5">
+      <div className="flex items-center gap-2 shrink-0">
+        {/* Multilingual Selector Dropdown - High priority, always visible */}
+        <LanguageSelector />
+
         {/* Active Location & Coordinates Selector Badge */}
         <button
           onClick={onOpenLocationModal}
           title="Change Location or Enter Custom Lat/Lon Coordinates"
-          className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#0b1b42]/80 hover:bg-[#12285a] border border-sky-500/30 hover:border-cyan-400 text-xs text-sky-200 transition-all"
+          className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#0b1b42]/80 hover:bg-[#12285a] border border-sky-500/30 hover:border-cyan-400 text-xs text-sky-200 transition-all cursor-pointer shrink-0"
         >
           <Compass className="w-3.5 h-3.5 text-cyan-400 animate-spin-slow" />
           <div className="text-left leading-none">
-            <div className="font-bold text-white text-[11px] truncate max-w-[110px]">
+            <div className="font-bold text-white text-[11px] truncate max-w-[100px] xl:max-w-[120px]">
               {activeRegion?.name || 'Bay of Bengal'}
             </div>
-            <div className="text-[9px] font-mono text-cyan-300 mt-0.5 hidden xl:block">
+            <div className="text-[9px] font-mono text-cyan-300 mt-0.5 hidden 2xl:block">
               {activeRegion?.coords || '15.297° N, 87.860° E'}
             </div>
           </div>
@@ -115,7 +118,7 @@ export default function Header({
         <button
           onClick={onOpenDatePicker}
           title="Click to Open Observation Date & Temporal Engine"
-          className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#0b1b42]/80 hover:bg-[#12285a] border border-sky-500/30 hover:border-cyan-400 text-xs text-sky-200 font-mono transition-all group"
+          className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#0b1b42]/80 hover:bg-[#12285a] border border-sky-500/30 hover:border-cyan-400 text-xs text-sky-200 font-mono transition-all group cursor-pointer shrink-0"
         >
           <Calendar className="w-3.5 h-3.5 text-cyan-400 group-hover:scale-110 transition-transform" />
           <span className="font-bold text-white group-hover:text-cyan-300 transition-colors">{selectedDate}</span>
@@ -123,31 +126,11 @@ export default function Header({
           <span className="text-cyan-300 font-bold">{currentTime || '12:00'} UTC</span>
         </button>
 
-        {/* Depth Pressure Quick Trigger */}
-        <button
-          onClick={onOpenDepthPressure}
-          title="Hydrostatic Pressure Profiler across Depths"
-          className="hidden lg:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#0b1b42]/80 hover:bg-[#12285a] border border-sky-500/30 hover:border-cyan-400 text-xs text-sky-200 transition-all cursor-pointer"
-        >
-          <Gauge className="w-3.5 h-3.5 text-cyan-400" />
-          <span className="font-bold text-[11px]">{t('navbar.pressureCalc', 'Pressure Calc')}</span>
-        </button>
-
-        {/* NetCDF CF-1.8 Data Ingestion Trigger */}
-        <button
-          onClick={onOpenNetcdfIngestion}
-          title="Ingest NetCDF CF-1.8 / Delimited Oceanographic Datasets"
-          className="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#0b1b42]/80 hover:bg-[#12285a] border border-cyan-500/30 hover:border-cyan-400 text-xs text-cyan-200 transition-all cursor-pointer"
-        >
-          <Database className="w-3.5 h-3.5 text-cyan-400" />
-          <span className="font-bold text-[11px]">{t('navbar.netcdfIngest', 'Ingest NetCDF')}</span>
-        </button>
-
         {/* Analytic Report Quick Trigger */}
         <button
           onClick={onOpenAnalyticReport}
           title="Print & View Official Oceanographic Analytical Report"
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-sky-600/80 to-cyan-500/80 hover:from-sky-500 hover:to-cyan-400 border border-cyan-400/40 text-xs text-white shadow-glow-cyan transition-all cursor-pointer"
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-sky-600/80 to-cyan-500/80 hover:from-sky-500 hover:to-cyan-400 border border-cyan-400/40 text-xs text-white shadow-glow-cyan transition-all cursor-pointer shrink-0"
         >
           <FileText className="w-3.5 h-3.5 text-white" />
           <span className="font-bold hidden sm:inline text-[11px]">Report</span>
@@ -157,7 +140,7 @@ export default function Header({
         <button
           onClick={onOpenStormNews}
           title="Live Marine Weather News, Rain & Storm Probability"
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-red-950/60 hover:bg-red-900/70 border border-red-500/40 text-xs text-red-300 shadow-glow-red transition-all cursor-pointer"
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-red-950/60 hover:bg-red-900/70 border border-red-500/40 text-xs text-red-300 shadow-glow-red transition-all cursor-pointer shrink-0"
         >
           <Bell className="w-3.5 h-3.5 text-red-400 animate-pulse" />
           <span className="font-bold hidden sm:inline text-[11px]">Storm</span>
@@ -166,27 +149,30 @@ export default function Header({
           </span>
         </button>
 
-        {/* El Niño Simulation Action Badge Button */}
+        {/* Depth Pressure Quick Trigger (Visible on wider screens; accessible in 3D HUD) */}
         <button
-          onClick={() => setActiveTab('El Niño Simulation')}
-          title="Open Dedicated Equatorial Pacific ENSO / El Niño Digital Twin"
-          className={`hidden xl:flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer border ${
-            activeTab === 'El Niño Simulation'
-              ? 'bg-gradient-to-r from-red-600 to-orange-500 text-white border-orange-400 shadow-glow-orange'
-              : 'bg-red-950/60 hover:bg-red-900/80 text-orange-200 border-red-500/40 shadow-glow-red'
-          }`}
+          onClick={onOpenDepthPressure}
+          title="Hydrostatic Pressure Profiler across Depths"
+          className="hidden 2xl:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#0b1b42]/80 hover:bg-[#12285a] border border-sky-500/30 hover:border-cyan-400 text-xs text-sky-200 transition-all cursor-pointer shrink-0"
         >
-          <span className="text-sm">🔥</span>
-          <span className="font-bold text-[11px]">{t('navbar.ensoSimulation', 'El Niño')}</span>
+          <Gauge className="w-3.5 h-3.5 text-cyan-400" />
+          <span className="font-bold text-[11px]">{t('navbar.pressureCalc', 'Pressure Calc')}</span>
         </button>
 
-        {/* Indian Languages Selector Dropdown */}
-        <LanguageSelector />
+        {/* NetCDF CF-1.8 Data Ingestion Trigger (Visible on wider screens; accessible via Data Explorer tab) */}
+        <button
+          onClick={onOpenNetcdfIngestion}
+          title="Ingest NetCDF CF-1.8 / Delimited Oceanographic Datasets"
+          className="hidden 2xl:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#0b1b42]/80 hover:bg-[#12285a] border border-cyan-500/30 hover:border-cyan-400 text-xs text-cyan-200 transition-all cursor-pointer shrink-0"
+        >
+          <Database className="w-3.5 h-3.5 text-cyan-400" />
+          <span className="font-bold text-[11px]">{t('navbar.netcdfIngest', 'Ingest NetCDF')}</span>
+        </button>
 
         {/* Night / Theme toggle */}
         <button 
           title="Toggle Day/Night Mode"
-          className="p-2 rounded-xl bg-[#0b1b42]/80 border border-sky-500/20 text-sky-300 hover:text-cyan-300 hover:border-cyan-500/40 transition-colors"
+          className="p-2 rounded-xl bg-[#0b1b42]/80 border border-sky-500/20 text-sky-300 hover:text-cyan-300 hover:border-cyan-500/40 transition-colors shrink-0"
         >
           <Moon className="w-4 h-4" />
         </button>
