@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { X, Radio, Clock, MapPin, Navigation, Activity, Droplets, Thermometer, Sparkles, Wind, Cpu } from 'lucide-react';
 
 export default function BuoyDetailModal({ buoy, onClose }) {
+  const { t } = useTranslation();
   const [activeVariable, setActiveVariable] = useState('temp');
 
   if (!buoy) return null;
@@ -13,7 +15,7 @@ export default function BuoyDetailModal({ buoy, onClose }) {
   const variableConfigs = {
     temp: {
       id: 'temp',
-      name: 'Temperature',
+      name: t('parameters.sst', 'Temperature'),
       unit: '°C',
       min: 0,
       max: 32,
@@ -24,7 +26,7 @@ export default function BuoyDetailModal({ buoy, onClose }) {
     },
     salinity: {
       id: 'salinity',
-      name: 'Salinity',
+      name: t('parameters.salinity', 'Salinity'),
       unit: 'PSU',
       min: 30,
       max: 37,
@@ -35,7 +37,7 @@ export default function BuoyDetailModal({ buoy, onClose }) {
     },
     oxygen: {
       id: 'oxygen',
-      name: 'Dissolved Oxygen',
+      name: t('parameters.oxygen', 'Dissolved Oxygen'),
       unit: 'mg/L',
       min: 0,
       max: 8.5,
@@ -46,7 +48,7 @@ export default function BuoyDetailModal({ buoy, onClose }) {
     },
     chlorophyll: {
       id: 'chlorophyll',
-      name: 'Chlorophyll-a',
+      name: t('parameters.chlorophyll', 'Chlorophyll-a'),
       unit: 'mg/m³',
       min: 0,
       max: 3.5,
@@ -57,7 +59,7 @@ export default function BuoyDetailModal({ buoy, onClose }) {
     },
     velocity: {
       id: 'velocity',
-      name: 'Current Velocity',
+      name: t('parameters.currents', 'Current Velocity'),
       unit: 'm/s',
       min: 0,
       max: 2.0,
@@ -138,19 +140,19 @@ export default function BuoyDetailModal({ buoy, onClose }) {
         {/* Real-Time Telemetry Grid */}
         <div className="grid grid-cols-4 gap-2 mb-4">
           <div className="bg-[#06122c] p-2.5 rounded-xl border border-sky-500/20 text-center">
-            <div className="text-[10px] text-slate-400 font-medium">SST Surface</div>
+            <div className="text-[10px] text-slate-400 font-medium">{t('report.sst', 'SST Surface')}</div>
             <div className="text-sm font-mono font-bold text-cyan-300">{buoy.sst ?? '--'} °C</div>
           </div>
           <div className="bg-[#06122c] p-2.5 rounded-xl border border-sky-500/20 text-center">
-            <div className="text-[10px] text-slate-400 font-medium">Salinity</div>
+            <div className="text-[10px] text-slate-400 font-medium">{t('report.salinity', 'Salinity')}</div>
             <div className="text-sm font-mono font-bold text-emerald-300">{buoy.salinity ?? '--'} PSU</div>
           </div>
           <div className="bg-[#06122c] p-2.5 rounded-xl border border-sky-500/20 text-center">
-            <div className="text-[10px] text-slate-400 font-medium">Current</div>
+            <div className="text-[10px] text-slate-400 font-medium">{t('report.currentVelocity', 'Current')}</div>
             <div className="text-sm font-mono font-bold text-amber-300">{buoy.currentSpeed ?? '--'} m/s</div>
           </div>
           <div className="bg-[#06122c] p-2.5 rounded-xl border border-sky-500/20 text-center">
-            <div className="text-[10px] text-slate-400 font-medium">Wave Hs</div>
+            <div className="text-[10px] text-slate-400 font-medium">{t('parameters.wave', 'Wave Hs')}</div>
             <div className="text-sm font-mono font-bold text-purple-300">{buoy.waveHeight ?? '--'} m</div>
           </div>
         </div>

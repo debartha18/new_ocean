@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { 
   X, 
   Gauge, 
@@ -22,6 +23,7 @@ export default function DepthPressureModal({
   initialDepth = 100,
   onApplyDepth
 }) {
+  const { t } = useTranslation();
   const [lat, setLat] = useState(currentLat);
   const [lon, setLon] = useState(currentLon);
   const [depth, setDepth] = useState(initialDepth);
@@ -60,14 +62,14 @@ export default function DepthPressureModal({
           <div>
             <div className="flex items-center gap-2">
               <h2 className="text-lg font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 via-sky-200 to-white tracking-wide">
-                Ocean Hydrostatic Pressure & Depth Profiler
+                {t('depthPressure.title', 'Ocean Hydrostatic Pressure & Depth Profiler')}
               </h2>
               <span className="px-2 py-0.5 text-[10px] font-bold uppercase rounded bg-cyan-500/20 text-cyan-300 border border-cyan-400/30">
-                UNESCO / TEOS-10 Physics
+                UNESCO / TEOS-10
               </span>
             </div>
             <p className="text-xs text-sky-300/80 font-mono">
-              Dynamic physical calculation for any depth, latitude, and seawater density
+              {t('depthPressure.subtitle', 'Dynamic physical calculation for any depth, latitude, and seawater density')}
             </p>
           </div>
         </div>
@@ -77,7 +79,7 @@ export default function DepthPressureModal({
           <div>
             <label className="text-[10px] font-mono text-slate-400 block mb-1 flex items-center gap-1">
               <Compass className="w-3 h-3 text-cyan-400" />
-              <span>Latitude (°N/S)</span>
+              <span>{t('controls.latitude', 'Latitude (°N/S)')}</span>
             </label>
             <input
               type="number"
@@ -96,7 +98,7 @@ export default function DepthPressureModal({
           <div>
             <label className="text-[10px] font-mono text-slate-400 block mb-1 flex items-center gap-1">
               <Compass className="w-3 h-3 text-cyan-400" />
-              <span>Longitude (°E/W)</span>
+              <span>{t('controls.longitude', 'Longitude (°E/W)')}</span>
             </label>
             <input
               type="number"
@@ -114,7 +116,7 @@ export default function DepthPressureModal({
 
           <div>
             <label className="text-[10px] font-mono text-slate-400 block mb-1">
-              Surface Temp SST (°C)
+              {t('about.calcSst', 'Surface Temp SST (°C)')}
             </label>
             <input
               type="number"
@@ -132,7 +134,7 @@ export default function DepthPressureModal({
 
           <div>
             <label className="text-[10px] font-mono text-slate-400 block mb-1">
-              Salinity (PSU / g·kg⁻¹)
+              {t('about.calcSal', 'Salinity (PSU / g·kg⁻¹)')}
             </label>
             <input
               type="number"
@@ -155,17 +157,17 @@ export default function DepthPressureModal({
             <div>
               <div className="text-xs font-bold uppercase tracking-wider text-cyan-300 flex items-center gap-2">
                 <ArrowDown className="w-4 h-4 text-cyan-400 animate-bounce" />
-                <span>Selected Subsurface Depth:</span>
+                <span>{t('depthPressure.depthZ', 'Selected Subsurface Depth')}:</span>
                 <span className="text-base font-black font-mono text-white bg-cyan-500/20 px-3 py-0.5 rounded-lg border border-cyan-400/40">
-                  {depth} meters
+                  {depth} m
                 </span>
               </div>
               <div className="text-[11px] text-slate-300 mt-1 flex items-center gap-2">
                 <span className="px-2 py-0.5 rounded bg-blue-500/20 text-sky-200 border border-blue-400/30 text-[10px] font-mono">
-                  {currentPressure.benchmark}
+                  {currentPressure.benchmarkKey ? t('zones.' + currentPressure.benchmarkKey, currentPressure.benchmark) : currentPressure.benchmark}
                 </span>
                 <span className="text-slate-400">
-                  Density ρ = {currentPressure.density} kg/m³
+                  ρ = {currentPressure.density} kg/m³
                 </span>
               </div>
             </div>
@@ -255,7 +257,7 @@ export default function DepthPressureModal({
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2 text-xs font-bold text-white uppercase tracking-wider">
               <Layers className="w-3.5 h-3.5 text-cyan-400" />
-              <span>Standard Water Column Depth Profile Matrix (Lat: {lat}°)</span>
+              <span>{t('depthPressure.matrixTitle', 'Standard Water Column Depth Profile Matrix')} (Lat: {lat}°)</span>
             </div>
             <span className="text-[10px] font-mono text-slate-400">
               Click any row to select depth
@@ -265,13 +267,13 @@ export default function DepthPressureModal({
           <table className="w-full text-left text-xs font-mono">
             <thead>
               <tr className="border-b border-sky-500/20 text-[10px] text-slate-400 uppercase">
-                <th className="py-1.5 px-2">Depth (m)</th>
-                <th className="py-1.5 px-2">Pressure (dbar)</th>
-                <th className="py-1.5 px-2">Atm (atm)</th>
-                <th className="py-1.5 px-2">Pressure (MPa)</th>
-                <th className="py-1.5 px-2">Pressure (PSI)</th>
-                <th className="py-1.5 px-2">Density (kg/m³)</th>
-                <th className="py-1.5 px-2">Ocean Zone</th>
+                <th className="py-1.5 px-2">{t('report.depthZ', 'Depth (m)')}</th>
+                <th className="py-1.5 px-2">{t('report.pressureDbar', 'Pressure (dbar)')}</th>
+                <th className="py-1.5 px-2">{t('report.atmospheres', 'Atm (atm)')}</th>
+                <th className="py-1.5 px-2">{t('report.mpa', 'Pressure (MPa)')}</th>
+                <th className="py-1.5 px-2">{t('report.psi', 'Pressure (PSI)')}</th>
+                <th className="py-1.5 px-2">{t('report.density', 'Density (kg/m³)')}</th>
+                <th className="py-1.5 px-2">{t('report.oceanicZone', 'Ocean Zone')}</th>
               </tr>
             </thead>
             <tbody>
@@ -297,7 +299,7 @@ export default function DepthPressureModal({
                     <td className="py-1.5 px-2 text-emerald-200">{lvl.psi}</td>
                     <td className="py-1.5 px-2 text-slate-400">{lvl.density}</td>
                     <td className="py-1.5 px-2 text-[10px] text-slate-400 truncate max-w-[150px]">
-                      {lvl.benchmark}
+                      {lvl.benchmarkKey ? t('zones.' + lvl.benchmarkKey, lvl.benchmark) : lvl.benchmark}
                     </td>
                   </tr>
                 );
@@ -318,13 +320,13 @@ export default function DepthPressureModal({
               onClick={onClose}
               className="px-4 py-2 rounded-xl bg-sky-500/10 hover:bg-sky-500/20 text-xs font-semibold text-slate-300 transition-colors"
             >
-              Close
+              {t('common.close', 'Close')}
             </button>
             <button
               onClick={handleApplyToSimulation}
               className="px-5 py-2 rounded-xl bg-gradient-to-r from-sky-600 to-cyan-500 hover:from-sky-500 hover:to-cyan-400 text-xs font-bold text-white shadow-glow-cyan transition-all flex items-center gap-1.5"
             >
-              <span>Apply {depth}m to 3D Simulation</span>
+              <span>{t('depthPressure.applyTo3D', 'Apply Depth Slice to 3D View')}</span>
             </button>
           </div>
         </div>

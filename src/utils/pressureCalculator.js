@@ -67,15 +67,38 @@ export function calculateHydrostaticPressure(depth, lat = 15.0, sst = 28.0, sali
 
   // Comparison benchmark
   let benchmark = 'Surface / Intertidal Zone';
-  if (depth >= 10000) benchmark = 'Challenger Deep (Mariana Trench Hadal Zone)';
-  else if (depth >= 6000) benchmark = 'Hadal Trench Zone (Extreme Deep Abyss)';
-  else if (depth >= 4000) benchmark = 'Abyssal Plain (Titanic Depth / Deep Seabed)';
-  else if (depth >= 2000) benchmark = 'Bathypelagic Midnight Zone (Bioluminescent Life)';
-  else if (depth >= 1000) benchmark = 'Mesopelagic Twilight Boundary (Permanent Darkness)';
-  else if (depth >= 500) benchmark = 'Deep Submarine Operational Hull Limit';
-  else if (depth >= 200) benchmark = 'Continental Shelf Edge / Thermocline';
-  else if (depth >= 50) benchmark = 'Epipelagic Photic Zone (Commercial Diving Limit)';
-  else if (depth > 0) benchmark = 'Recreational Scuba Dive Range';
+  let benchmarkKey = 'surfaceIntertidal';
+  if (depth >= 10000) {
+    benchmark = 'Challenger Deep (Mariana Trench Hadal Zone)';
+    benchmarkKey = 'challengerDeep';
+  } else if (depth >= 6000) {
+    benchmark = 'Abyssopelagic Ocean Trench';
+    benchmarkKey = 'abyssalTrench';
+  } else if (depth >= 4000) {
+    benchmark = 'Abyssal Plain (Titanic Depth Range)';
+    benchmarkKey = 'abyssalPlain';
+  } else if (depth >= 2000) {
+    benchmark = 'Bathypelagic Midnight Zone (Deep In-Situ Profiling Limit)';
+    benchmarkKey = 'bathypelagic';
+  } else if (depth >= 1000) {
+    benchmark = 'Mesopelagic Twilight Zone (Argo Float Drift Parking)';
+    benchmarkKey = 'mesopelagic';
+  } else if (depth >= 500) {
+    benchmark = 'Permanent Thermocline Base';
+    benchmarkKey = 'thermoclineBase';
+  } else if (depth >= 200) {
+    benchmark = 'Euphotic Photic Zone Boundary';
+    benchmarkKey = 'euphoticBoundary';
+  } else if (depth >= 100) {
+    benchmark = 'Epipelagic Photic Zone (Commercial Diving Limit)';
+    benchmarkKey = 'epipelagic100';
+  } else if (depth >= 50) {
+    benchmark = 'Epipelagic Photic Zone (Commercial Diving Limit)';
+    benchmarkKey = 'epipelagic50';
+  } else if (depth > 0) {
+    benchmark = 'Recreational Scuba Dive Range';
+    benchmarkKey = 'scubaRange';
+  }
 
   return {
     depth,
@@ -91,7 +114,8 @@ export function calculateHydrostaticPressure(depth, lat = 15.0, sst = 28.0, sali
     mpa: parseFloat(pressureMpa.toFixed(3)),
     psi: parseFloat(pressurePsi.toFixed(1)),
     columnMassKgPerM2: Math.round(columnMassKgPerM2),
-    benchmark
+    benchmark,
+    benchmarkKey
   };
 }
 

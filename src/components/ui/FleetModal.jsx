@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { X, Radio, ChevronRight } from 'lucide-react';
 import { BUOY_MARKERS } from '../../data/oceanData';
 
 export default function FleetModal({ isOpen, onClose, onSelectBuoy }) {
+  const { t } = useTranslation();
   const [filterType, setFilterType] = useState('all');
 
   if (!isOpen) return null;
@@ -26,7 +28,7 @@ export default function FleetModal({ isOpen, onClose, onSelectBuoy }) {
             <Radio className="w-6 h-6 animate-pulse" />
           </div>
           <div>
-            <h2 className="text-lg font-black text-white">In-Situ Sensor Fleet Directory</h2>
+            <h2 className="text-lg font-black text-white">{t('fleet.title', 'In-Situ Sensor Fleet Directory')}</h2>
             <p className="text-xs text-sky-300/70 font-mono">
               RAMA / OMNI Moored Network • SVP Drifters • INCOIS Argo Floats
             </p>
@@ -36,11 +38,11 @@ export default function FleetModal({ isOpen, onClose, onSelectBuoy }) {
         {/* Filter Pills */}
         <div className="flex items-center gap-2 mb-4 pb-2 border-b border-sky-500/15 overflow-x-auto">
           {[
-            { id: 'all', label: 'All Fleet Assets' },
-            { id: 'mooredBuoy', label: 'Moored Buoys' },
-            { id: 'argoFloat', label: 'Core Argo' },
+            { id: 'all', label: t('fleet.allPlatforms', 'All Fleet Assets') },
+            { id: 'mooredBuoy', label: t('fleet.mooredBuoys', 'Moored Buoys') },
+            { id: 'argoFloat', label: t('fleet.argoFloats', 'Core Argo') },
             { id: 'bgcArgo', label: 'BGC-Argo' },
-            { id: 'gliderProfile', label: 'Underwater Gliders' },
+            { id: 'gliderProfile', label: t('fleet.gliders', 'Underwater Gliders') },
             { id: 'adcpMooring', label: 'ADCP Moorings' }
           ].map((f) => (
             <button

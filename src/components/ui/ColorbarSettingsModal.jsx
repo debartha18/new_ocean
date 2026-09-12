@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { X, Sliders, Palette, Eye, RotateCcw, Activity, Layers } from 'lucide-react';
 import { PARAMETERS } from '../../data/oceanData';
 
@@ -57,6 +58,7 @@ export default function ColorbarSettingsModal({
   customRanges = {},
   setCustomRanges
 }) {
+  const { t } = useTranslation();
   if (!isOpen) return null;
 
   const currentParamConfig = PARAMETERS[selectedParam] || PARAMETERS.sst;
@@ -115,10 +117,10 @@ export default function ColorbarSettingsModal({
           </div>
           <div>
             <h2 className="text-lg font-black text-white flex items-center gap-2">
-              Colorbar & 3D Volumetric Controls
+              {t('colorbar.title', 'Colorbar & 3D Volumetric Controls')}
             </h2>
             <p className="text-xs text-sky-300/70 font-mono">
-              Palette Editor • Min/Max Physical Bounds • Layer Opacity • Depth Exaggeration
+              {t('colorbar.subtitle', 'Palette Editor • Min/Max Physical Bounds • Layer Opacity • Depth Exaggeration')}
             </p>
           </div>
         </div>
@@ -127,7 +129,7 @@ export default function ColorbarSettingsModal({
         <div className="mb-4">
           <label className="text-xs font-bold text-sky-200 uppercase tracking-wider block mb-2 flex items-center gap-1.5">
             <Activity className="w-3.5 h-3.5 text-cyan-400" />
-            Active Ocean Parameter
+            {t('controls.oceanParameters', 'Active Ocean Parameter')}
           </label>
           <div className="grid grid-cols-3 sm:grid-cols-6 gap-1.5">
             {Object.values(PARAMETERS).map((p) => {
@@ -142,7 +144,7 @@ export default function ColorbarSettingsModal({
                       : 'bg-[#081533] text-slate-300 hover:text-white border-sky-500/20 hover:border-sky-400'
                   }`}
                 >
-                  <div className="truncate">{p.name.split(' ')[0]}</div>
+                  <div className="truncate">{t('parameters.' + p.id, p.name).split(' ')[0]}</div>
                   <div className="text-[10px] font-mono opacity-75">{p.unit}</div>
                 </button>
               );
@@ -154,7 +156,7 @@ export default function ColorbarSettingsModal({
         <div className="mb-4">
           <label className="text-xs font-bold text-sky-200 uppercase tracking-wider block mb-2 flex items-center gap-1.5">
             <Palette className="w-3.5 h-3.5 text-cyan-400" />
-            Color Palette Selection
+            {t('colorbar.palette', 'Color Palette Selection')}
           </label>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             {COLOR_PALETTES.map((pal) => {
@@ -193,7 +195,7 @@ export default function ColorbarSettingsModal({
         <div className="bg-[#050c1e] p-4 rounded-2xl border border-sky-500/20 mb-4">
           <div className="flex items-center justify-between mb-3">
             <span className="text-xs font-bold text-sky-200 uppercase tracking-wider">
-              Data Bounds & Scale Mode ({currentParamConfig.unit})
+              {t('colorbar.dataBounds', 'Data Bounds & Scale Mode')} ({currentParamConfig.unit})
             </span>
             {/* Log / Linear scale toggle */}
             <div className="flex items-center bg-[#081533] p-0.5 rounded-lg border border-sky-500/30">
@@ -205,7 +207,7 @@ export default function ColorbarSettingsModal({
                     : 'text-slate-400 hover:text-white'
                 }`}
               >
-                Linear
+                {t('common.linear', 'Linear')}
               </button>
               <button
                 onClick={() => setIsLogScale(true)}
@@ -215,7 +217,7 @@ export default function ColorbarSettingsModal({
                     : 'text-slate-400 hover:text-white'
                 }`}
               >
-                Logarithmic (log₁₀)
+                {t('common.logarithmic', 'Logarithmic (log₁₀)')}
               </button>
             </div>
           </div>
@@ -223,7 +225,7 @@ export default function ColorbarSettingsModal({
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="text-[11px] text-slate-400 font-mono block mb-1">
-                Minimum Value ({currentParamConfig.unit})
+                {t('colorbar.minVal', 'Minimum Value')} ({currentParamConfig.unit})
               </label>
               <input
                 type="number"
@@ -235,7 +237,7 @@ export default function ColorbarSettingsModal({
             </div>
             <div>
               <label className="text-[11px] text-slate-400 font-mono block mb-1">
-                Maximum Value ({currentParamConfig.unit})
+                {t('colorbar.maxVal', 'Maximum Value')} ({currentParamConfig.unit})
               </label>
               <input
                 type="number"
@@ -255,7 +257,7 @@ export default function ColorbarSettingsModal({
             <div className="flex items-center justify-between text-xs font-bold text-sky-200 mb-2">
               <span className="flex items-center gap-1.5">
                 <Eye className="w-3.5 h-3.5 text-cyan-400" />
-                Layer Opacity
+                {t('colorbar.layerOpacity', 'Layer Opacity')}
               </span>
               <span className="font-mono text-cyan-300">{Math.round(layerOpacity * 100)}%</span>
             </div>
@@ -269,8 +271,8 @@ export default function ColorbarSettingsModal({
               className="w-full accent-cyan-400 cursor-pointer"
             />
             <div className="flex justify-between text-[10px] text-slate-500 font-mono mt-1">
-              <span>20% (Subsurface)</span>
-              <span>100% (Solid)</span>
+              <span>20%</span>
+              <span>100%</span>
             </div>
           </div>
 
@@ -279,7 +281,7 @@ export default function ColorbarSettingsModal({
             <div className="flex items-center justify-between text-xs font-bold text-sky-200 mb-2">
               <span className="flex items-center gap-1.5">
                 <Layers className="w-3.5 h-3.5 text-amber-400" />
-                Vertical Exaggeration
+                {t('colorbar.verticalExaggeration', 'Vertical Exaggeration')}
               </span>
               <span className="font-mono text-amber-300">{verticalExaggeration.toFixed(1)}x</span>
             </div>
@@ -293,9 +295,9 @@ export default function ColorbarSettingsModal({
               className="w-full accent-amber-400 cursor-pointer"
             />
             <div className="flex justify-between text-[10px] text-slate-500 font-mono mt-1">
-              <span>0.5x (Gentle)</span>
+              <span>0.5x</span>
               <span>1.0x</span>
-              <span>3.0x (Trench)</span>
+              <span>3.0x</span>
             </div>
           </div>
         </div>
@@ -307,14 +309,14 @@ export default function ColorbarSettingsModal({
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-xs text-slate-300 hover:text-white transition-all cursor-pointer"
           >
             <RotateCcw className="w-3.5 h-3.5 text-sky-400" />
-            <span>Reset to Standard</span>
+            <span>{t('colorbar.resetStandard', 'Reset to Standard')}</span>
           </button>
 
           <button
             onClick={onClose}
             className="px-5 py-2 rounded-xl bg-gradient-to-r from-sky-600 to-cyan-500 hover:from-sky-500 hover:to-cyan-400 text-xs font-bold text-white shadow-glow-cyan transition-all cursor-pointer"
           >
-            Apply & View 3D Scene
+            {t('common.close', 'Apply & View 3D Scene')}
           </button>
         </div>
       </div>
