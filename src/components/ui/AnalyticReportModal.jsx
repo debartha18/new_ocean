@@ -94,16 +94,18 @@ export default function AnalyticReportModal({
           {/* 1. Formal Report Header */}
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-sky-500/30">
             <div>
-              <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-lg bg-cyan-500/20 border border-cyan-400/40 flex items-center justify-center text-cyan-400">
-                  <Waves className="w-5 h-5" />
-                </div>
+              <div className="flex items-center gap-3">
+                <img
+                  src="/oceanova-logo.jpg"
+                  alt="OCEANOVA"
+                  className="w-10 h-10 rounded-xl object-cover border border-cyan-400/40 shadow-glow-cyan"
+                />
                 <div>
                   <h1 className="text-xl font-black tracking-wider text-white">
-                    OCEAN VISION 3D — SCIENTIFIC ANALYTIC REPORT
+                    OCEANOVA — OCEAN DIGITAL TWIN REPORT
                   </h1>
-                  <p className="text-xs text-sky-400 font-mono">
-                    Global Integrated Ocean Observing System (GOOS) & Digital Twin Synthesis
+                  <p className="text-xs text-sky-400 font-mono uppercase tracking-wider">
+                    Explore • Analyze • Preserve — Global Integrated Ocean Observing System (GOOS) Synthesis
                   </p>
                 </div>
               </div>

@@ -21,23 +21,34 @@ export default function Header({
   return (
     <header className="h-16 px-5 border-b border-sky-500/20 bg-[#060f26]/90 backdrop-blur-md flex items-center justify-between z-30 select-none">
       {/* Brand & Logo */}
-      <div className="flex items-center gap-3">
-        <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-sky-600 via-cyan-400 to-blue-600 p-0.5 shadow-glow-cyan flex items-center justify-center">
-          <div className="w-full h-full bg-[#060f26] rounded-[10px] flex items-center justify-center">
-            <Waves className="w-6 h-6 text-cyan-400 animate-pulse" />
-          </div>
+      <div 
+        onClick={() => setActiveTab('3D View')}
+        className="flex items-center gap-3 cursor-pointer group"
+        title="OCEANOVA | Explore • Analyze • Preserve"
+      >
+        <div className="relative">
+          <img
+            src="/oceanova-logo.jpg"
+            alt="OCEANOVA Logo"
+            className="w-10 h-10 rounded-xl object-cover border border-cyan-400/50 shadow-glow-cyan group-hover:scale-105 transition-all"
+          />
+          <span className="absolute -bottom-1 -right-1 w-3 h-3 rounded-full bg-emerald-400 border-2 border-[#060f26]" title="Satellite Telemetry Active" />
         </div>
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="text-lg font-black tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 via-sky-200 to-white">
-              OCEAN VISION 3D
+            <h1 className="text-lg font-black tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 via-sky-200 to-white group-hover:from-white group-hover:to-cyan-200 transition-all">
+              OCEANOVA
             </h1>
             <span className="px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 rounded">
               v2.4 Live
             </span>
           </div>
-          <p className="text-[11px] font-medium text-sky-300/60 tracking-tight">
-            Ocean Digital Twin Platform
+          <p className="text-[10px] font-semibold text-sky-300/80 tracking-wider uppercase flex items-center gap-1.5">
+            <span>Explore</span>
+            <span className="text-cyan-400">•</span>
+            <span>Analyze</span>
+            <span className="text-cyan-400">•</span>
+            <span>Preserve</span>
           </p>
         </div>
       </div>

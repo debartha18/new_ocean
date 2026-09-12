@@ -30,30 +30,29 @@ export default function AboutView({ onNavigateTab, onOpenAnalyticReport }) {
     <div className="relative flex-1 overflow-y-auto bg-[#030712] text-slate-100 p-4 md:p-8 select-none animate-in fade-in duration-200 custom-scrollbar">
       {/* 1. Header Hero */}
       <div className="max-w-4xl mx-auto mb-8">
-        <div className="flex items-center gap-3 mb-3">
-          <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-sky-600 via-cyan-400 to-blue-600 p-0.5 shadow-glow-cyan flex items-center justify-center">
-            <div className="w-full h-full bg-[#060f26] rounded-[14px] flex items-center justify-center">
-              <Waves className="w-7 h-7 text-cyan-400 animate-pulse" />
-            </div>
-          </div>
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-5 mb-5 p-5 rounded-3xl bg-gradient-to-r from-[#06183d]/90 via-[#0a2357]/80 to-[#041029]/90 border border-sky-500/30 shadow-cockpit">
+          <img
+            src="/oceanova-logo.jpg"
+            alt="OCEANOVA Mission Emblem"
+            className="w-20 h-20 md:w-24 md:h-24 rounded-2xl object-cover border border-cyan-400/50 shadow-glow-cyan shrink-0 hover:scale-105 transition-transform"
+          />
           <div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 mb-1">
               <h1 className="text-2xl md:text-3xl font-black tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 via-sky-200 to-white">
-                OCEAN VISION 3D
+                OCEANOVA
               </h1>
               <span className="px-2 py-0.5 text-xs font-semibold uppercase bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 rounded">
                 v2.4 Live
               </span>
             </div>
-            <p className="text-xs text-sky-300/80 font-medium">
-              Autonomous Physical Oceanographic Digital Twin & Planetary Telemetry Platform
+            <p className="text-xs font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-sky-200 uppercase tracking-widest mb-1.5">
+              Explore • Analyze • Preserve
+            </p>
+            <p className="text-xs text-sky-300/80 font-medium leading-relaxed">
+              Autonomous Physical Oceanographic Digital Twin & Planetary Telemetry Platform synthesising satellite altimetry, Argo profilers, gliders, and mooring arrays.
             </p>
           </div>
         </div>
-
-        <p className="text-sm text-slate-300 leading-relaxed font-normal">
-          OceanVision 3D is a real-time 3D ocean digital twin engineered to synthesize multi-satellite altimetry, autonomous in-situ mooring arrays (RAMA, OMNI, PIRATA), and profiling Argo floats into physically grounded hydrodynamic simulations and interactive planetary cartography.
-        </p>
 
         {/* Quick Navigation Action Grid */}
         <div className="flex flex-wrap items-center gap-2.5 mt-5">
