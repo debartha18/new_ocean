@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { PARAMETERS, calculateParameterAtDepth } from '../../data/oceanData';
 
 export default function BottomParameterStrip({ 
@@ -8,45 +9,47 @@ export default function BottomParameterStrip({
   depth = 50,
   onNavigateToMap 
 }) {
+  const { t } = useTranslation();
+
   const parameterConfigs = [
     {
       id: 'sst',
-      title: 'Sea Surface Temperature (°C)',
+      title: `${t('parameters.sst', 'Sea Surface Temperature')} (°C)`,
       min: '0',
       max: '32',
       gradient: 'linear-gradient(to right, #001f3f, #0074D9, #00d2be, #2ECC40, #FFDC00, #FF851B, #FF4136)'
     },
     {
       id: 'salinity',
-      title: 'Salinity (PSU)',
+      title: `${t('parameters.salinity', 'Salinity')} (PSU)`,
       min: '30',
       max: '40',
       gradient: 'linear-gradient(to right, #051e3e, #0f4c81, #1b98e0, #56cbf9, #00ffc8)'
     },
     {
       id: 'currents',
-      title: 'Ocean Currents (m/s)',
+      title: `${t('parameters.currents', 'Ocean Currents')} (m/s)`,
       min: '0',
       max: '2.0',
       isArrows: true
     },
     {
       id: 'wave',
-      title: 'Wave Height (m)',
+      title: `${t('parameters.wave', 'Wave Height')} (m)`,
       min: '0',
       max: '6',
       gradient: 'linear-gradient(to right, #1e1b4b, #4338ca, #8b5cf6, #ec4899, #f43f5e)'
     },
     {
       id: 'chlorophyll',
-      title: 'Chlorophyll-a (mg/m³)',
+      title: `${t('parameters.chlorophyll', 'Chlorophyll-a')} (mg/m³)`,
       min: '0.01',
       max: '10',
       gradient: 'linear-gradient(to right, #022c22, #065f46, #059669, #10b981, #a3e635, #fef08a)'
     },
     {
       id: 'oxygen',
-      title: 'Dissolved Oxygen (mg/L)',
+      title: `${t('parameters.oxygen', 'Dissolved Oxygen')} (mg/L)`,
       min: '0',
       max: '10',
       gradient: 'linear-gradient(to right, #4a044e, #701a75, #0284c7, #06b6d4, #67e8f9)'

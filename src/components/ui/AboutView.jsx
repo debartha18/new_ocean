@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { 
   Waves, 
   Globe2, 
@@ -18,6 +19,7 @@ import {
 import { calculateHydrostaticPressure } from '../../utils/pressureCalculator';
 
 export default function AboutView({ onNavigateTab, onOpenAnalyticReport }) {
+  const { t } = useTranslation();
   // Live Interactive UNESCO TEOS-10 Physics Sandbox State
   const [calcDepth, setCalcDepth] = useState(1500);
   const [calcLat, setCalcLat] = useState(15.0);
@@ -46,10 +48,10 @@ export default function AboutView({ onNavigateTab, onOpenAnalyticReport }) {
               </span>
             </div>
             <p className="text-xs font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-sky-200 uppercase tracking-widest mb-1.5">
-              Explore • Analyze • Preserve
+              {t('about.tagline', 'Explore • Analyze • Preserve')}
             </p>
             <p className="text-xs text-sky-300/80 font-medium leading-relaxed">
-              Autonomous Physical Oceanographic Digital Twin & Planetary Telemetry Platform synthesising satellite altimetry, Argo profilers, gliders, and mooring arrays.
+              {t('about.heroDesc', 'Autonomous Physical Oceanographic Digital Twin & Planetary Telemetry Platform synthesising satellite altimetry, Argo profilers, gliders, and mooring arrays.')}
             </p>
           </div>
         </div>
@@ -61,35 +63,35 @@ export default function AboutView({ onNavigateTab, onOpenAnalyticReport }) {
             className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-gradient-to-r from-sky-600 to-cyan-500 hover:from-sky-500 hover:to-cyan-400 text-xs font-bold text-white shadow-glow-cyan transition-all cursor-pointer"
           >
             <Waves className="w-4 h-4" />
-            <span>Launch 3D Simulation</span>
+            <span>{t('about.launchSim', 'Launch 3D Simulation')}</span>
           </button>
           <button
             onClick={() => onNavigateTab?.('Map View')}
             className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#081b40] hover:bg-[#0c285e] text-xs font-semibold text-cyan-300 border border-sky-500/30 transition-all cursor-pointer"
           >
             <Globe2 className="w-4 h-4" />
-            <span>World Satellite Map</span>
+            <span>{t('about.worldMap', 'World Satellite Map')}</span>
           </button>
           <button
             onClick={() => onNavigateTab?.('Dashboard')}
             className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#081b40] hover:bg-[#0c285e] text-xs font-semibold text-cyan-300 border border-sky-500/30 transition-all cursor-pointer"
           >
             <LayoutDashboard className="w-4 h-4" />
-            <span>Dashboard</span>
+            <span>{t('navbar.dashboard', 'Dashboard')}</span>
           </button>
           <button
             onClick={() => onNavigateTab?.('Data Explorer')}
             className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#081b40] hover:bg-[#0c285e] text-xs font-semibold text-cyan-300 border border-sky-500/30 transition-all cursor-pointer"
           >
             <Database className="w-4 h-4" />
-            <span>Data Explorer</span>
+            <span>{t('navbar.dataExplorer', 'Data Explorer')}</span>
           </button>
           <button
             onClick={onOpenAnalyticReport}
             className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#081b40] hover:bg-[#0c285e] text-xs font-semibold text-slate-200 border border-sky-500/30 transition-all cursor-pointer"
           >
             <FileText className="w-4 h-4" />
-            <span>Analytic Report</span>
+            <span>{t('navbar.analytics', 'Analytic Report')}</span>
           </button>
         </div>
       </div>

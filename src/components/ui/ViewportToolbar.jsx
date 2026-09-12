@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { 
   Home, 
   Globe, 
@@ -32,6 +33,7 @@ export default function ViewportToolbar({
   regionName = 'Bay of Bengal',
   regionCoords = '15.297° N, 87.860° E'
 }) {
+  const { t } = useTranslation();
   const currentParam = PARAMETERS[selectedParam] || PARAMETERS.sst;
 
   const activeRange = customRanges[selectedParam] || {
@@ -185,7 +187,7 @@ export default function ViewportToolbar({
                 }`}
               >
                 <Icon className="w-4 h-4" />
-                <span>{mode.label}</span>
+                <span>{t(`viewModes.${mode.id}`, mode.label)}</span>
               </button>
             );
           })}
@@ -209,11 +211,11 @@ export default function ViewportToolbar({
                 OCEANOVA
               </span>
               <span className="text-[9px] px-1 py-0.2 rounded bg-cyan-500/20 text-cyan-300 font-mono font-bold border border-cyan-500/30">
-                3D MODEL
+                {t('brand.badge3d', '3D MODEL')}
               </span>
             </div>
             <span className="text-[9px] font-semibold tracking-wider text-sky-300/75 uppercase">
-              Explore • Analyze • Preserve
+              {t('brand.motto', 'Explore • Analyze • Preserve')}
             </span>
           </div>
         </div>

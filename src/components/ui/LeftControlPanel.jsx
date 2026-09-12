@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { 
   Thermometer, 
   Droplets, 
@@ -40,6 +41,7 @@ export default function LeftControlPanel({
   setIsStormLayerActive,
   onOpenDepthPressure
 }) {
+  const { t } = useTranslation();
   const [prevRegionId, setPrevRegionId] = useState(activeRegion?.id);
   const [inputLat, setInputLat] = useState(activeRegion?.lat?.toString() || '15.297');
   const [inputLon, setInputLon] = useState(activeRegion?.lon?.toString() || '87.860');
@@ -81,13 +83,13 @@ export default function LeftControlPanel({
         <div className="flex items-center justify-between mb-2 px-1">
           <div className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-cyan-300">
             <Compass className="w-3.5 h-3.5 text-cyan-400" />
-            <span>Position / Coordinates</span>
+            <span>{t('controls.positionCoords', 'Position / Coordinates')}</span>
           </div>
           <button
             onClick={onOpenLocationModal}
-            className="text-[10px] font-bold text-cyan-400 hover:text-white bg-cyan-500/20 px-2 py-0.5 rounded border border-cyan-400/30 transition-colors"
+            className="text-[10px] font-bold text-cyan-400 hover:text-white bg-cyan-500/20 px-2 py-0.5 rounded border border-cyan-400/30 transition-colors cursor-pointer"
           >
-            Change Basin
+            {t('controls.changeBasin', 'Change Basin')}
           </button>
         </div>
 
@@ -140,7 +142,7 @@ export default function LeftControlPanel({
       <div className="glass-panel rounded-2xl p-3.5 border border-sky-500/20">
         <div className="flex items-center justify-between mb-3 px-1">
           <span className="text-xs font-bold uppercase tracking-wider text-sky-200">
-            Parameters
+            {t('controls.oceanParameters', 'Parameters')}
           </span>
           <span className="text-[10px] text-sky-400/80 font-mono">6 Variables</span>
         </div>
@@ -154,7 +156,7 @@ export default function LeftControlPanel({
               <button
                 key={param.id}
                 onClick={() => setSelectedParam(param.id)}
-                className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-left transition-all duration-200 ${
+                className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-left transition-all duration-200 cursor-pointer ${
                   isSelected
                     ? 'bg-gradient-to-r from-sky-600/90 to-blue-700/90 text-white shadow-glow-cyan border border-cyan-400/50'
                     : 'bg-[#0a1838]/60 text-slate-300 hover:bg-[#112450]/80 hover:text-white border border-white/5'
@@ -165,7 +167,9 @@ export default function LeftControlPanel({
                     <Icon className="w-4 h-4" />
                   </div>
                   <div>
-                    <div className="text-xs font-semibold leading-tight">{param.name}</div>
+                    <div className="text-xs font-semibold leading-tight">
+                      {t(`parameters.${param.id}`, param.name)}
+                    </div>
                     <div className="text-[10px] font-mono font-bold text-cyan-300">
                       {calculateParameterAtDepth(param.id, depth, activeRegion)} {param.unit}
                     </div>
@@ -184,7 +188,7 @@ export default function LeftControlPanel({
       <div className="glass-panel rounded-2xl p-3.5 border border-sky-500/20">
         <div className="flex items-center justify-between mb-3 px-1">
           <span className="text-xs font-bold uppercase tracking-wider text-sky-200">
-            Depth (m)
+            {t('controls.verticalDepth', 'Depth (m)')}
           </span>
           <span className="text-xs font-mono font-bold text-cyan-300 bg-cyan-500/20 px-2 py-0.5 rounded border border-cyan-400/30">
             {depth} m
@@ -232,7 +236,7 @@ export default function LeftControlPanel({
         >
           <span className="flex items-center gap-1.5">
             <Gauge className="w-3.5 h-3.5 text-cyan-400" />
-            <span>Pressure Calculator (dbar/atm)</span>
+            <span>{t('controls.hydrostaticPressure', 'Pressure Calculator')} (dbar/atm)</span>
           </span>
           <ChevronRight className="w-3.5 h-3.5" />
         </button>
@@ -242,7 +246,7 @@ export default function LeftControlPanel({
       <div className="glass-panel rounded-2xl p-3.5 border border-sky-500/20">
         <div className="flex items-center justify-between mb-2 px-1">
           <span className="text-xs font-bold uppercase tracking-wider text-sky-200">
-            Time
+            {t('controls.timeStepper', 'Time')}
           </span>
           <span className="text-xs font-mono text-cyan-300 font-semibold">
             {formatTime(timeHour)} UTC
@@ -313,11 +317,11 @@ export default function LeftControlPanel({
         <div className="flex items-center justify-between mb-2 px-1">
           <div className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-red-400">
             <Zap className="w-3.5 h-3.5 text-red-400 animate-pulse" />
-            <span>Storm & Rain Threat</span>
+            <span>{t('controls.meteorologicalThreatLayer', 'Storm & Rain Threat')}</span>
           </div>
           <button
             onClick={() => setIsStormLayerActive && setIsStormLayerActive(!isStormLayerActive)}
-            className={`text-[10px] font-bold px-2 py-0.5 rounded border transition-colors ${
+            className={`text-[10px] font-bold px-2 py-0.5 rounded border transition-colors cursor-pointer ${
               isStormLayerActive
                 ? 'bg-red-500/30 text-red-300 border-red-400/50'
                 : 'bg-slate-800/60 text-slate-400 border-slate-700'
@@ -356,11 +360,11 @@ export default function LeftControlPanel({
 
         <button
           onClick={onOpenStormNews}
-          className="w-full py-1.5 px-3 rounded-xl bg-red-500/20 hover:bg-red-500/30 border border-red-500/40 text-xs font-bold text-red-300 flex items-center justify-between transition-colors shadow-glow-red"
+          className="w-full py-1.5 px-3 rounded-xl bg-red-500/20 hover:bg-red-500/30 border border-red-500/40 text-xs font-bold text-red-300 flex items-center justify-between transition-colors shadow-glow-red cursor-pointer"
         >
           <span className="flex items-center gap-1.5">
             <Newspaper className="w-3.5 h-3.5" />
-            <span>Position Storm News</span>
+            <span>{t('controls.severeStormTracks', 'Position Storm News')}</span>
           </span>
           <ChevronRight className="w-4 h-4" />
         </button>

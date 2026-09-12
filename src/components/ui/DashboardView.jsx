@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { 
   Waves, 
   Activity, 
@@ -25,9 +26,11 @@ export default function DashboardView({
   onOpenStormNews,
   onOpenAlerts
 }) {
+  const { t } = useTranslation();
+
   const globalKpis = [
     {
-      title: 'Active Observing Fleet',
+      title: t('dashboard.activeFleet', 'Active Observing Fleet'),
       value: '49 Platforms',
       sub: '24 Moored • 18 Argo • 7 Drifters',
       icon: Radio,
@@ -35,10 +38,10 @@ export default function DashboardView({
       border: 'border-cyan-500/30',
       bg: 'bg-[#091b40]/80',
       action: onOpenFleetModal,
-      actionLabel: 'View Fleet'
+      actionLabel: t('common.viewFleet', 'View Fleet')
     },
     {
-      title: 'Global Mean SST',
+      title: t('dashboard.globalMeanSst', 'Global Mean SST'),
       value: '18.42 °C',
       sub: '+0.34 °C above 1991-2020 climatology',
       icon: Thermometer,
@@ -46,10 +49,10 @@ export default function DashboardView({
       border: 'border-amber-500/30',
       bg: 'bg-[#181206]/80',
       action: () => onNavigateTab?.('Map View'),
-      actionLabel: 'SST Map'
+      actionLabel: t('common.sstMap', 'SST Map')
     },
     {
-      title: 'Global Wave Swell Energy',
+      title: t('dashboard.waveSwell', 'Global Wave Swell Energy'),
       value: '2.15 m',
       sub: 'Mean significant swell height',
       icon: Activity,
@@ -57,10 +60,10 @@ export default function DashboardView({
       border: 'border-sky-500/30',
       bg: 'bg-[#061530]/80',
       action: () => onNavigateTab?.('3D View'),
-      actionLabel: 'Simulate Swell'
+      actionLabel: t('common.simulateSwell', 'Simulate Swell')
     },
     {
-      title: 'Active Tropical Vortices',
+      title: t('dashboard.activeStorms', 'Active Tropical Vortices'),
       value: '3 Systems',
       sub: 'REMAL (Cat 3) • YAGI (Cat 4) • BERYL',
       icon: ShieldAlert,
@@ -68,10 +71,10 @@ export default function DashboardView({
       border: 'border-red-500/30',
       bg: 'bg-[#1e0818]/80',
       action: onOpenStormNews,
-      actionLabel: 'Storm Tracks'
+      actionLabel: t('common.stormTracks', 'Storm Tracks')
     },
     {
-      title: 'QC Assimilation Score',
+      title: t('dashboard.qcScore', 'QC Assimilation Score'),
       value: '99.4%',
       sub: `RMSE ${VALIDATION_METRICS.rmse} • Corr ${VALIDATION_METRICS.correlation}`,
       icon: CheckCircle2,
@@ -79,7 +82,7 @@ export default function DashboardView({
       border: 'border-emerald-500/30',
       bg: 'bg-[#061e16]/80',
       action: onOpenAnalyticReport,
-      actionLabel: 'QC Report'
+      actionLabel: t('common.qcReport', 'QC Report')
     }
   ];
 
@@ -112,14 +115,14 @@ export default function DashboardView({
             className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-sky-500/10 hover:bg-sky-500/20 text-xs font-semibold text-cyan-300 border border-sky-500/30 transition-all cursor-pointer"
           >
             <Waves className="w-4 h-4" />
-            <span>Launch 3D View</span>
+            <span>{t('dashboard.launch3D', 'Launch 3D View')}</span>
           </button>
           <button
             onClick={() => onNavigateTab?.('Map View')}
             className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-sky-500/10 hover:bg-sky-500/20 text-xs font-semibold text-cyan-300 border border-sky-500/30 transition-all cursor-pointer"
           >
             <Globe2 className="w-4 h-4" />
-            <span>Open World Map</span>
+            <span>{t('dashboard.openMap', 'Open World Map')}</span>
           </button>
           <button
             onClick={onOpenAnalyticReport}

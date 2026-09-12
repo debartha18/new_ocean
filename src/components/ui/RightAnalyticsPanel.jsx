@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { 
   ChevronRight, 
   Brain, 
@@ -36,6 +37,7 @@ export default function RightAnalyticsPanel({
   ensoState = { phase: 'elnino', intensity: 0.75 },
   onFocusPacific
 }) {
+  const { t } = useTranslation();
   const chartW = 240;
   const chartH = 85;
   const validationData = React.useMemo(() => {
@@ -75,7 +77,7 @@ export default function RightAnalyticsPanel({
         <div className="flex items-center justify-between mb-2 px-1">
           <div className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-red-400">
             <Zap className="w-3.5 h-3.5 text-red-400 animate-pulse" />
-            <span>Storm & Rain Threat</span>
+            <span>{t('controls.meteorologicalThreatLayer', 'Storm & Rain Threat')}</span>
           </div>
           <div className="flex items-center gap-1">
             {isLive && (
@@ -164,7 +166,7 @@ export default function RightAnalyticsPanel({
         >
           <span className="flex items-center gap-1.5">
             <Newspaper className="w-3.5 h-3.5 text-red-400" />
-            <span>Live Marine Storm News</span>
+            <span>{t('analytics.stormNews', 'Live Marine Storm News')}</span>
           </span>
           <ChevronRight className="w-4 h-4" />
         </button>
@@ -175,7 +177,7 @@ export default function RightAnalyticsPanel({
         <div className="flex items-center justify-between mb-2 px-1">
           <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-cyan-300">
             <FileText className="w-3.5 h-3.5 text-cyan-400" />
-            <span>Analytical Report</span>
+            <span>{t('navbar.analytics', 'Analytical Report')}</span>
           </div>
           <span className="text-[10px] font-mono text-cyan-300 bg-cyan-500/20 px-2 py-0.5 rounded border border-cyan-400/30">
             Printable / PDF
@@ -192,7 +194,7 @@ export default function RightAnalyticsPanel({
         >
           <span className="flex items-center gap-2">
             <Printer className="w-3.5 h-3.5" />
-            <span>Print Analytic Report</span>
+            <span>{t('common.printReport', 'Print Analytic Report')}</span>
           </span>
           <ChevronRight className="w-4 h-4" />
         </button>
@@ -241,7 +243,7 @@ export default function RightAnalyticsPanel({
       <div className="glass-panel rounded-2xl p-3.5 border border-sky-500/20">
         <div className="flex items-center justify-between mb-3 px-1">
           <span className="text-xs font-bold uppercase tracking-wider text-sky-200">
-            In-situ Observations
+            {t('analytics.inSituTelemetry', 'In-situ Observations')}
           </span>
           <span className="text-[10px] font-mono text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/30 flex items-center gap-1">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
@@ -266,9 +268,9 @@ export default function RightAnalyticsPanel({
 
         <button
           onClick={onOpenFleetModal}
-          className="w-full py-1.5 px-3 rounded-xl bg-sky-500/10 hover:bg-sky-500/20 text-xs font-semibold text-cyan-300 flex items-center justify-between transition-colors border border-sky-500/20"
+          className="w-full py-1.5 px-3 rounded-xl bg-sky-500/10 hover:bg-sky-500/20 text-xs font-semibold text-cyan-300 flex items-center justify-between transition-colors border border-sky-500/20 cursor-pointer"
         >
-          <span>View Fleet Telemetry</span>
+          <span>{t('analytics.inspectFleet', 'View Fleet Telemetry')}</span>
           <ChevronRight className="w-4 h-4" />
         </button>
       </div>
@@ -277,7 +279,7 @@ export default function RightAnalyticsPanel({
       <div className="glass-panel rounded-2xl p-3.5 border border-sky-500/20">
         <div className="flex items-center justify-between mb-2 px-1">
           <span className="text-xs font-bold uppercase tracking-wider text-sky-200">
-            Model vs Observations
+            {t('analytics.modelVsObserved', 'Model vs Observations')}
           </span>
           <div className="flex items-center gap-1 text-[11px] text-sky-300 bg-[#0a1838] px-2 py-0.5 rounded-lg border border-sky-500/20 cursor-pointer">
             <span>SST</span>
@@ -368,9 +370,9 @@ export default function RightAnalyticsPanel({
 
         <button
           onClick={onOpenAnomalyModal}
-          className="w-full py-1.5 px-3 rounded-xl bg-red-500/20 hover:bg-red-500/30 text-xs font-bold text-red-300 flex items-center justify-center gap-1.5 transition-all border border-red-500/40 shadow-glow-red"
+          className="w-full py-1.5 px-3 rounded-xl bg-red-500/20 hover:bg-red-500/30 text-xs font-bold text-red-300 flex items-center justify-center gap-1.5 transition-all border border-red-500/40 shadow-glow-red cursor-pointer"
         >
-          <span>View Diagnostics & Impact</span>
+          <span>{t('analytics.inspectDetails', 'View Diagnostics & Impact')}</span>
           <ChevronRight className="w-4 h-4" />
         </button>
       </div>
